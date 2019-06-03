@@ -11,9 +11,9 @@ fi
 
 
 
-base_input=${NOL}'/data/'${dataset}
+base_input=${NOL}'/data/'${data_dir}
 base_sample='node-sample-'
-base_output=${NOL}'/results/'${dataset}${base_sample}
+base_output=${NOL}'/results/'${data_dir}${base_sample}
 sample_para=0.01
 sample_dir=${base_sample}${sample_para}
 iterations='10'
