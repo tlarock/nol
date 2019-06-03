@@ -165,7 +165,7 @@ def experiment(model, input_directory, sample_folder, output_folder, \
 
 
 def main(args):
-    log_file = "/home/larock.t/git/nol/results/logs/outLTD_" + str(args.model) + "_" + str(args.gamma) + "_" + \
+    log_file = "../results/logs/outLTD_" + str(args.model) + "_" + str(args.gamma) + "_" + \
             str(args.lambda_) + "_" + str(args.iterations) + "_" + str(args.budget)+ ".out"
     logging.basicConfig(filename=log_file, level=logging.DEBUG)
     if args.ktype == 'int':
