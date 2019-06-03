@@ -3,31 +3,9 @@
 set -ex
 
 dataset=$1
-
-case ${dataset} in 'ba')
-	data_dir='synthetic/ba-graph_N-10000_m-5_m0-5/';;
-'bter')
-	data_dir='synthetic/N-10000_maxcc-0.95_maxgcc-0.15_avgDeg-10/';;
-'er')
-	data_dir='synthetic/er-graph_N-10000_p-0.001/';;
-'dblp')
-	data_dir='dblp/';;
-'cora')
-	data_dir='cora/';;
-'caida')
-	data_dir='caida/';;
-'enron')
-	data_dir='enron/';;
-esac
-
-
-base_input=${NOL}'/data/'${data_dir}
-base_sample='node-sample-'
-base_output=${NOL}'/results/'${data_dir}${base_sample}
 sample_para=0.01
-sample_dir=${base_sample}${sample_para}
 iterations='10'
-budget='5'
+budget='5000'
 alpha=0.01
 featuretype='default'
 rewardfunction='new_nodes'
@@ -37,6 +15,28 @@ decay=0
 burnin=0
 compute_samp=False
 processes=5
+
+case ${dataset} in 'ba')
+	data_dir='synthetic/ba-graph_N-10000_m-5_m0-5/';;
+'bter')
+	data_dir='synthetic/N-10000_maxcc-0.95_maxgcc-0.15_avgDeg-10/';;
+'er')
+	data_dir='synthetic/er-graph_N-10000_p-0.001/';;
+'dblp')
+	data_dir='dblp/'
+	budget=4000;;
+'cora')
+	data_dir='cora/';;
+'caida')
+	data_dir='caida/';;
+'enron')
+	data_dir='enron/';;
+esac
+
+base_input=${NOL}'/data/'${data_dir}
+base_sample='node-sample-'
+base_output=${NOL}'/results/'${data_dir}${base_sample}
+sample_dir=${base_sample}${sample_para}
 
 ## NOL(\epsilon=0.3)
 output_folder=${base_output}${sample_para}/${featuretype}-${rewardfunction}'-NOL-epsilon-'${epsilon}-decay-$decay/
