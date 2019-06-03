@@ -2,9 +2,18 @@
 
 set -ex
 
-base_input=${NOL}'/data/synthetic/ba-graph_N-10000_m-5_m0-5/'
+dataset=$1
+
+if [ ${dataset} == 'ba' ] 
+then
+	data_dir='synthetic/ba-graph_N-10000_m-5_m0-5/'
+fi
+
+
+
+base_input=${NOL}'/data/'${dataset}
 base_sample='node-sample-'
-base_output=${NOL}'/results/synthetic/ba-graph_N-10000_m-5_m0-5/'${base_sample}
+base_output=${NOL}'/results/'${dataset}${base_sample}
 sample_para=0.01
 sample_dir=${base_sample}${sample_para}
 iterations='5'
@@ -50,4 +59,9 @@ python3 ../nol/run_experiment.py -m high -p ${epsilon} -i $base_input -s $sample
 ## KNN
 knn=${NOL}/baseline/net_complete/mab_explorer/
 cd ${knn}/mab_explorer/
-python sampling.py ${knn}/data/ba.txt -s 0.01 -b 50 -e 1 -m rn --results_dir ${knn}/results/
+if [ ${dataset} == 'ba' ]
+then
+	knn_data='ba.txt'
+fi
+
+python sampling.py ${knn}/data/${knn_data} -s 0.01 -b 50 -e 1 -m rn --results_dir ${knn}/results/
