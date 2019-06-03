@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-import Network, NOL, MedianOfMeans, NOL_SK
+import Network, NOL, NOL_HTR, NOL_SK
 from generate_netdisc_samples import netdisc_sample
 import numpy as np
 import os
@@ -36,7 +36,7 @@ def runOneTrial(model, sample_dir, realAdjList, sampleType, samplePortion, alpha
     g = Network.Network(realAdjList, sampleAdjList, calculate_features=calcFeatures, feature_type = feature_type, attribute_dict=attribute_dict)
 
     if model == 'MoMs':
-        probednode, _, rewards = MedianOfMeans.RunIteration(g, alpha, episodes, epochs, list(nodes), outfile, 'sarsa', model, 'no',\
+        probednode, _, rewards = NOL_HTR.RunIteration(g, alpha, episodes, epochs, list(nodes), outfile, 'sarsa', model, 'no',\
                                                             reward_function = reward_function, saveGAP = saveGAP, current_iteration=ite, p=p, k=k,\
                                                             decay=decay, target_attribute=target_attribute)
     elif model == 'svm' or model == 'knn' or model == 'linreg' or model == 'logit' or model == 'high' or model == 'low' or model == 'rand':
