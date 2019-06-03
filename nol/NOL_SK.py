@@ -24,7 +24,6 @@ def RunEpisode(G, alpha, lambda_, gamma, theta, epochs, Resultfile='output_file.
     ## TODO Adhoc
     values_list = []
     rewards_list = []
-    eligibilityTraces = np.zeros([len(theta), ])
     probedNodes = []
     unprobedNodeSet = G.sample_node_set.copy()
     unprobedNodeIndices = {G.node_to_row[i] for i in unprobedNodeSet}
@@ -37,8 +36,9 @@ def RunEpisode(G, alpha, lambda_, gamma, theta, epochs, Resultfile='output_file.
     intermediate_name = os.path.join(intermediate_result_dir, policy + '_iter' + str(iteration) + '_episode_' + str(episode) + '_intermediate.txt')
     with open(intermediate_name, 'w+') as intermediateFile:
         intermediateFile.write('epoch\treward\testimate\tdelta\tjump\tp')
-        for i in range(theta.shape[0]):
-            intermediateFile.write('\tTheta[' + str(i) + ']')
+        if policy not in ['high', 'low', 'rand']:
+            for i in range(theta.shape[0]):
+                intermediateFile.write('\tTheta[' + str(i) + ']')
         intermediateFile.write('\n')
 
     intermediate_graph_dir = os.path.join(Resultfile, 'intermediate_graphs')
@@ -55,8 +55,8 @@ def RunEpisode(G, alpha, lambda_, gamma, theta, epochs, Resultfile='output_file.
     rewards = []
 
     ## If the reward function is on an attribute, some nodes are already queried
+    targetNodeSet = set()
     if reward_function == 'attribute':
-        targetNodeSet = set()
         for node in G.node_to_row:
             if target_attribute in G.attribute_dict[node]:
                 if len(G.complete_graph_adjlist[node]) == len(G.sample_graph_adjlist[node]):
@@ -104,8 +104,28 @@ def RunEpisode(G, alpha, lambda_, gamma, theta, epochs, Resultfile='output_file.
     interval = 500
     epoch = 0
 
+    if burn_in <= 0:
+        if policy == 'svm':
+            values = compute_svm_values(samples_mat, features, unprobedNodeIndices)
+        elif policy == 'knn':
+            values = compute_knn_values(samples_mat, features, unprobedNodeIndices)
+        elif policy == 'logit':
+            y = samples_mat[:,samples_mat.shape[1]-1]
+            ## if there is only 1 class, use the 1 class prediction
+            if np.unique(y).shape[0] == 1:
+                for node in unprobedNodeSet:
+                    all_unprobed_mat = np.array(samples_mat)
+                    all_unprobed_mat = np.vstack( (all_unprobed_mat, np.append(features[G.node_to_row[node]], np.array([-1]))))
+                values, theta = compute_logit_values(all_unprobed_mat, features, unprobedNodeIndices, one_class=True)
+            else:
+                values, theta = compute_logit_values(samples_mat, features, unprobedNodeIndices)
+        elif policy == 'linreg':
+            values, theta = compute_linreg_values(samples_mat, features, unprobedNodeIndices)
+        elif policy in ['high', 'low', 'rand']:
+            values = compute_deg_values(G, unprobedNodeIndices)
+
     ## burn in phase
-    if burn_in > 0:
+    elif burn_in > 0:
         logging.info('# burn in queries: ' + str(burn_in))
         for _ in range(burn_in):
             if reward_function == 'attribute':
@@ -317,7 +337,10 @@ def RunEpisode(G, alpha, lambda_, gamma, theta, epochs, Resultfile='output_file.
         else:
             logging.info('SOMETHING IS WRONG WITH JUMP SWITCH!')
 
-        write_intermediate(epoch, reward, currentValue, delta, jump, p, theta, intermediate_name)
+        if policy not in ['high', 'low', 'rand']:
+            write_intermediate(epoch, reward, currentValue, delta, jump, p, theta, intermediate_name)
+        else:
+            write_intermediate(epoch, reward, currentValue, delta, jump, p, None, intermediate_name)
         write_query(G, probedNode, targetNodeSet, intermediateGraphFile)
         if (saveGap != 0 and graphSaveInterval == (saveGap)) or epoch == (epochs-1):
             graphSaveInterval = 0
@@ -368,8 +391,9 @@ def write_intermediate(epoch, reward, currentValue, delta, jump, p, theta, inter
         # write intermediate numbers
         intermediateFile.write(str(epoch) + '\t' + str(reward) +  '\t' + str(currentValue)  + '\t'+ str(delta) + '\t' + str(jump) + '\t' + str(p))
 
-        for i in range(theta.shape[0]):
-            intermediateFile.write('\t' + str(theta[i]))
+        if theta is not None:
+            for i in range(theta.shape[0]):
+                intermediateFile.write('\t' + str(theta[i]))
         intermediateFile.write('\n')
 
 def compute_svm_values(samples_mat, unprobed_features, unprobedNodeIndices):
@@ -465,9 +489,13 @@ def action(G, policy, values, unprobedNodeIndices, p = -1):
         return idx, True
 
 def RunIteration(G, alpha_input, episodes, epochs , initialNodes, Resultfile='output_file.txt', updateType = 'qlearning',
-                 policy ='random', regularization = 'nonnegative', order = 'linear', reward_function = 'new_nodes', saveGAP = 0, current_iteration=0,
+                 policy ='rand', regularization = 'nonnegative', order = 'linear', reward_function = 'new_nodes', saveGAP = 0, current_iteration=0,
                  p = None, decay=0, target_attribute = None, burn_in=0):
-    theta_estimates = np.random.uniform(-0.2, 0.2,(G.get_numfeature(),))     # Initialize estimates at all 0.5
+    if policy not in ['high', 'low', 'rand']:
+        theta_estimates = np.random.uniform(-0.2, 0.2,(G.get_numfeature(),))     # Initialize estimates at all 0.5
+    else:
+        theta_estimates = 0
+
     initial_graph = G.copy()
     print(policy)
     for episode in range(episodes):

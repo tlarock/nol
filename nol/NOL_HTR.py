@@ -199,13 +199,8 @@ def RunEpisode(G, alpha, lambda_, gamma, theta, epochs, Resultfile='output_file.
 
         if updateType is 'sarsa':
             ## TODO ad-hoc!
-            if policy == 'globalmax_jump' or policy == 'globalmax_restart' or policy == 'globalmax_smartjump' or policy == 'globalmax_adaptive' or policy == 'MoMs':
-                next_node, _ = action(G, adjacentNodeIndex, policy, values, unprobedNodeIndices, p)
-            else:
-                next_node = action(G, adjacentNodeIndex, policy, values, unprobedNodeIndices, p)
+            next_node, _ = action(G, adjacentNodeIndex, policy, values, unprobedNodeIndices, p)
             nextValue = values[next_node]
-        elif updateType is 'qlearning':
-            nextValue = values[action(G, adjacentNodeIndex, 'max', values, unprobedNodeIndices, p)]
         else:
             logging.warning("Unrecognized update type \"" + updateType + "\"")
             sys.exit(1)
@@ -400,52 +395,15 @@ def action(G, adjnode, policy, values, unprobedNodeIndices, p = -1):
     idx = []
     restart_probability = utility.getProbRestart()
     unprobedNodeList = [row for row in G.row_to_node.keys() if row in unprobedNodeIndices]
-    if policy == 'globalmax':
-        return unprobedNodeList[np.argmax(values[unprobedNodeList])]
-    elif policy == 'globalmax_jump' or policy == 'MoMs':
-        prob = np.random.random()
-        ## With probability p, follow global max
-        if prob > p:
-            idx = np.argmax(values[unprobedNodeList])
-            return unprobedNodeList[idx], False
-        else:
-            ## with probability 1-p, pick a node at random
-            return np.random.choice(unprobedNodeList, 1)[0], True
-    elif policy == 'globalmax_restart' or policy == 'globalmax_adaptive':
-        prob = np.random.random()
-        ## With probability p, follow global max
-        if prob > p:
-            idx = np.argmax(values[unprobedNodeList])
-            return unprobedNodeList[idx], False
-        else:
-            ## with probability 1-p, pick a node at random
-            ## Until there are none left, pick nodes from
-            # the initial sample
-            not_probed_initial = list(G.original_node_set - G.probedNodeSet)
-            if len(not_probed_initial) > 0:
-                node = np.random.choice(not_probed_initial, 1)[0]
-                return G.node_to_row[node], True
-            else:
-                return np.random.choice(unprobedNodeList, 1)[0], True
-    elif policy == 'globalmax_smartjump':
-        prob = np.random.random()
-        ## With probability p, follow global max
-        if prob > p:
-            idx = np.argmax(values[unprobedNodeList])
-            return unprobedNodeList[idx], False
-        else:
-            ## with probability 1-p, pick a node at random
-            ## proportional to the values
-            probabilities = values[unprobedNodeList] + abs(min(values[unprobedNodeList])) + 1e-100
-            probabilities /= sum(probabilities)
-            #probabilities = utility.softmax(values[unprobedNodeList])
-            return np.random.choice(unprobedNodeList, 1, p = probabilities)[0], True
-    elif policy == 'globalrandom':
-        idx = utility.random_pick(values[unprobedNodeList], 1)
-        return  unprobedNodeList[idx[0]]
+    prob = np.random.random()
+    ## With probability p, follow global max
+    if prob > p:
+        idx = np.argmax(values[unprobedNodeList])
+        return unprobedNodeList[idx], False
     else:
-        logging.warning("Unrecognized policy \"" + policy + "\". Exiting.")
-        sys.exit(1)
+        ## with probability 1-p, pick a node at random
+        return np.random.choice(unprobedNodeList, 1)[0], True
+
 
 def RunIteration(G, alpha_input, episodes, epochs , initialNodes, Resultfile='output_file.txt', updateType = 'qlearning',
                  policy ='random', regularization = 'nonnegative', order = 'linear', reward_function = 'new_nodes', saveGAP = 0, current_iteration=0,
