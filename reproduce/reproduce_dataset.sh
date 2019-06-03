@@ -16,7 +16,7 @@ base_sample='node-sample-'
 base_output=${NOL}'/results/'${dataset}${base_sample}
 sample_para=0.01
 sample_dir=${base_sample}${sample_para}
-iterations='5'
+iterations='10'
 budget='5000'
 alpha=0.01
 featuretype='default'
@@ -56,6 +56,7 @@ output_folder=${base_output}${sample_para}/${featuretype}-${rewardfunction}'-hig
 
 python3 ../nol/run_experiment.py -m high -p ${epsilon} -i $base_input -s $sample_dir -o $output_folder -n 1 -iter $iterations -b $budget --reward $rewardfunction --save_gap $savegap --sample $compute_samp --processes $processes &
 
+wait
 ## KNN
 #knn=${NOL}/baseline/net_complete/mab_explorer/
 #cd ${knn}/mab_explorer/
