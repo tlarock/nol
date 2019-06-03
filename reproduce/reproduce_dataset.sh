@@ -57,11 +57,11 @@ output_folder=${base_output}${sample_para}/${featuretype}-${rewardfunction}'-hig
 python3 ../nol/run_experiment.py -m high -p ${epsilon} -i $base_input -s $sample_dir -o $output_folder -n 1 -iter $iterations -b $budget --reward $rewardfunction --save_gap $savegap --sample $compute_samp --processes $processes &
 
 ## KNN
-knn=${NOL}/baseline/net_complete/mab_explorer/
-cd ${knn}/mab_explorer/
-if [ ${dataset} == 'ba' ]
-then
-	knn_data='ba.txt'
-fi
+#knn=${NOL}/baseline/net_complete/mab_explorer/
+#cd ${knn}/mab_explorer/
+#if [ ${dataset} == 'ba' ]
+#then
+#	knn_data='ba.txt'
+#fi
 
-python sampling.py ${knn}/data/${knn_data} -s 0.01 -b 50 -e 1 -m rn --results_dir ${knn}/results/
+#python sampling.py ${knn}/data/${knn_data} -s 0.01 -b $budget -e $iterations -m rn --results_dir ${knn}/results/
