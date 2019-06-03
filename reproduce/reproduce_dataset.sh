@@ -4,16 +4,21 @@ set -ex
 
 dataset=$1
 
-if [ ${dataset} == 'ba' ] 
-then
-	data_dir='synthetic/ba-graph_N-10000_m-5_m0-5/'
-fi
-
-if [ ${dataset} == 'bter' ]
-then
-	data_dir='synthetic/N-10000_maxcc-0.95_maxgcc-0.15_avgDeg-10/'
-fi
-
+case ${dataset} in 'ba')
+	data_dir='synthetic/ba-graph_N-10000_m-5_m0-5/';;
+'bter')
+	data_dir='synthetic/N-10000_maxcc-0.95_maxgcc-0.15_avgDeg-10/';;
+'er')
+	data_dir='synthetic/er-graph_N-10000_p-0.001/';;
+'dblp')
+	data_dir='dblp/';;
+'cora')
+	data_dir='cora/';;
+'caida')
+	data_dir='caida/';;
+'enron')
+	data_dir='enron/';;
+esac
 
 
 base_input=${NOL}'/data/'${data_dir}
@@ -22,7 +27,7 @@ base_output=${NOL}'/results/'${data_dir}${base_sample}
 sample_para=0.01
 sample_dir=${base_sample}${sample_para}
 iterations='10'
-budget='5000'
+budget='5'
 alpha=0.01
 featuretype='default'
 rewardfunction='new_nodes'
