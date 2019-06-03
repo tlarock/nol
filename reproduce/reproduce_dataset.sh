@@ -9,15 +9,20 @@ then
 	data_dir='synthetic/ba-graph_N-10000_m-5_m0-5/'
 fi
 
+if [ ${dataset} == 'bter' ]
+then
+	data_dir='synthetic/N-10000_maxcc-0.95_maxgcc-0.15_avgDeg-10/'
+fi
 
 
-base_input=${NOL}'/data/'${dataset}
+
+base_input=${NOL}'/data/'${data_dir}
 base_sample='node-sample-'
-base_output=${NOL}'/results/'${dataset}${base_sample}
+base_output=${NOL}'/results/'${data_dir}${base_sample}
 sample_para=0.01
 sample_dir=${base_sample}${sample_para}
 iterations='10'
-budget='5000'
+budget='50'
 alpha=0.01
 featuretype='default'
 rewardfunction='new_nodes'
