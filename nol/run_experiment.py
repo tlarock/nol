@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import Network, NOL, NOL_HTR, NOL_SK
-from generate_netdisc_samples import netdisc_sample
+from sampling import generate_sample
 import numpy as np
 import os
 import re
@@ -21,7 +21,7 @@ FEATURES=['netdisc', 'default', 'refex', 'node2vec', 'n2v-refex', 'knn']
 
 def runOneTrial(model, sample_dir, realAdjList, sampleType, samplePortion, alpha, lam,
                 gamma, episodes, epochs, outfile, ite, saveGAP, feature_type, reward_function, p, decay, k, attribute_dict,
-                target_attribute, burn_in, compute_sample):
+                target_attribute, burn_in, compute_sample, sampling_method):
 
     logger = logging.getLogger(__name__)
     logger.info(str(ite))
@@ -29,7 +29,11 @@ def runOneTrial(model, sample_dir, realAdjList, sampleType, samplePortion, alpha
         sample = os.path.join(sample_dir,'*_'+str(ite)+'_'+str(sampleType)+'-*'+str(samplePortion)+'*')
         sampleAdjList, nodes, edges = read_network(min(glob.glob(sample), key=len))
     else:
-        sampleAdjList, nodes, edges = netdisc_sample(realAdjList, attribute_dict, target_attribute, 5)
+        if sampling_method == 'netdisc':
+            sampleAdjList, nodes, edges = generate_sample(realAdjList, 'netdisc', attribute_dict, target_attribute, 5)
+        elif sampling_method == 'node':
+            sampleAdjList, nodes, edges = generate_sample(realAdjList, 'node', float(samplePortion))
+
 
     logger.info("Starting sample nodes: " + str(len(nodes)))
     logger.info("Starting sample edges: " + str(len(edges)))
@@ -59,11 +63,11 @@ def runOneTrial(model, sample_dir, realAdjList, sampleType, samplePortion, alpha
 
 
 def runManyTrials(model, input_file, sample_type, sample_size, sample_dir, output_dir, budget, episodes, iterations, save_gap, alpha, lam, gamma,
-                  feature_type, reward_function, p, decay, k, attribute_file, target_attribute, burn_in, compute_sample, processes):
+                  feature_type, reward_function, p, decay, k, attribute_file, target_attribute, burn_in, compute_sample, sampling_method, processes):
 
     logger = logging.getLogger(__name__)
 
- 
+
     ## The complete network
     realAdjList, nodes, edges = read_network(input_file)
 
@@ -99,7 +103,8 @@ def runManyTrials(model, input_file, sample_type, sample_size, sample_dir, outpu
         for i in range(iterations):
             logger.info("Iteration: " + str(i))
             result = runOneTrial(model,sample_dir,realAdjList,sample_type,sample_size, alpha,lam,gamma,episodes,budget, output_dir,i,save_gap,\
-                                 feature_type, reward_function, p, decay, k, attribute_dict, target_attribute, burn_in, compute_sample)
+                                 feature_type, reward_function, p, decay, k, attribute_dict, target_attribute, burn_in, compute_sample,
+                                 sampling_method)
 
             results_matrix.append(np.array(result))
             # Compute and output averages after every iteration (so as to not lose data if
@@ -122,7 +127,8 @@ def runManyTrials(model, input_file, sample_type, sample_size, sample_dir, outpu
     else:
         pool = Pool(processes)
         arguments = [(model,sample_dir,realAdjList,sample_type,sample_size, alpha,lam,gamma,episodes,budget, output_dir,i,save_gap,\
-                                 feature_type, reward_function, p, decay, k, attribute_dict, target_attribute, burn_in, compute_sample) for i in range(iterations)]
+                                 feature_type, reward_function, p, decay, k, attribute_dict, target_attribute, burn_in, compute_sample,
+                      sampling_method) for i in range(iterations)]
         results_matrix = pool.starmap(runOneTrial, arguments)
         results_avg = np.mean(results_matrix, axis=0)
         results_sd = np.std(results_matrix, axis=0)
@@ -137,7 +143,8 @@ def runManyTrials(model, input_file, sample_type, sample_size, sample_dir, outpu
 
 def experiment(model, input_directory, sample_folder, output_folder, \
                budget, episodes, iterations, networks, save_gap, \
-               alpha, lambda_, gamma, feature_type, reward_function, p, decay, k, attribute_file, target_attribute, burn_in, compute_sample, processes):
+               alpha, lambda_, gamma, feature_type, reward_function, p, decay, k, attribute_file, target_attribute, burn_in, compute_sample,
+               sampling_method, processes):
     ## Get sample information
     type_regex = re.compile(r'[a-z]*-')
     size_regex = re.compile(r'[0-9][.][0-9]+')
@@ -161,7 +168,8 @@ def experiment(model, input_directory, sample_folder, output_folder, \
         ## Run 'iterations' iterations on this network
         results_matrix = runManyTrials(model, input_file, sample_type, sample_size, sample_dir, output_dir, \
                budget, episodes, iterations, save_gap, \
-               alpha, lambda_, gamma, feature_type, reward_function, p, decay, k, attribute_file, target_attribute, burn_in, compute_sample, processes)
+               alpha, lambda_, gamma, feature_type, reward_function, p, decay, k, attribute_file, target_attribute, burn_in, compute_sample,
+                                       sampling_method, processes)
 
 
 def main(args):
@@ -175,7 +183,7 @@ def main(args):
     experiment(args.model, args.input_directory, args.sample_folder, args.output_folder,
                   args.budget, args.episodes, args.iterations, args.networks, args.save_gap,
                   args.alpha, args.lambda_, args.gamma, args.feature_type, args.reward_function, args.p, args.decay, k, args.attribute_file,
-               args.target_attribute, args.burn_in, args.compute_sample, args.processes)
+               args.target_attribute, args.burn_in, args.compute_sample, args.sampling_method, args.processes)
     logging.info("END")
 
 if __name__ == '__main__':
@@ -206,6 +214,7 @@ if __name__ == '__main__':
     parser.add_argument('-k', dest='k', type=str, default=1, help='k for NOL-HTR.')
     parser.add_argument('--burn', dest='burn_in', type=int, default=0, help='# of high degree burn-in pulls to make')
     parser.add_argument('--sample', dest='compute_sample', type=str, default='False', choices=['True', 'False'], help='Flag to compute the sample rather than read it.')
+    parser.add_argument('--sampling-method', dest='sampling_method', type=str, default='node', choices=['node', 'netdisc', 'randomwalk'], help='Flag to compute the sample rather than read it.')
     parser.add_argument('--processes', dest='processes', type=int, default=1, help='# of proceses to use (default 1, no multiproc)')
 
     main(parser.parse_args())
