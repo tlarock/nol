@@ -10,8 +10,7 @@ import os
 import logging
 
 
-def RunEpisode(G, alpha, lambda_, gamma, theta, epochs, Resultfile='output_file.txt',
-             updateType='qlearning', policy='random', regularization='nonnegative', featureOrder='linear',
+def RunEpisode(G, alpha, theta, epochs, Resultfile='output_file.txt', policy='random', regularization='nonnegative', featureOrder='linear',
              reward_function='new_nodes', saveGap=0, episode=0, iteration=0, p = None, target_attribute = None):
     features = G.calculate_features(G, featureOrder)
     values = features.dot(theta)
@@ -40,8 +39,7 @@ def RunEpisode(G, alpha, lambda_, gamma, theta, epochs, Resultfile='output_file.
     if not os.path.exists(intermediate_result_dir):
         os.makedirs(intermediate_result_dir)
     intermediate_name = os.path.join(intermediate_result_dir, 'LTD_'+ policy + '_iter' + str(iteration) +
-                                     '_a' + str(alpha) + '_l' + str(lambda_) +
-                                     '_g' + str(gamma) + '_episode_' + str(episode) +
+                                     '_a' + str(alpha) + '_episode_' + str(episode) +
                                      '_intermediate.txt')
     intermediateFile = open(intermediate_name, 'w+')
     if policy == 'globalmax_adaptive':
@@ -56,8 +54,7 @@ def RunEpisode(G, alpha, lambda_, gamma, theta, epochs, Resultfile='output_file.
         os.makedirs(intermediate_graph_dir)
     intermediateGraphFile = os.path.join(intermediate_graph_dir, 'LTD_' + policy +
                                                 '_iter' + str(iteration) +
-                                                '_a' + str(alpha) + '_l' + str(lambda_) +
-                                                '_g' + str(gamma) + '_episode_' + str(episode) +
+                                                '_a' + str(alpha) + '_episode_' + str(episode) +
                                                 '_intermediate_graph_')
     featureFileDir = os.path.join(Resultfile, 'feature_analysis')
     if not os.path.exists(featureFileDir):
@@ -201,28 +198,24 @@ def RunEpisode(G, alpha, lambda_, gamma, theta, epochs, Resultfile='output_file.
         if len(unprobedNodeIndices) == 0:
             break
 
-        if updateType is 'sarsa':
-            ## TODO ad-hoc!
-            next_node, _ = action(G, adjacentNodeIndex, policy, values, unprobedNodeIndices, p)
-            nextValue = values[next_node]
-        elif updateType is 'qlearning':
-            nextValue = values[action(G, adjacentNodeIndex, 'max', values, unprobedNodeIndices, p)]
-        else:
-            logging.warning("Unrecognized update type \"" + updateType + "\"")
-            sys.exit(1)
+        ## Update (q-learning)
+        next_node, _ = action(G, adjacentNodeIndex, policy, values, unprobedNodeIndices, p)
+        nextValue = values[next_node]
 
         ## Calculate the estimated future reward
-        estimatedReward = reward + gamma * nextValue
+        #estimatedReward = reward + gamma * nextValue
+        estimatedReward = reward + nextValue
         delta = estimatedReward - currentValue
 
         ## Update the eligibility trace
-        eligibilityTraces = lambda_ * gamma * eligibilityTraces + currentGradient.T
+        #eligibilityTraces = lambda_ * gamma * eligibilityTraces + currentGradient.T
 
         ## Do learning
         old_theta = theta
         if alpha > 0:
             ## regular learning with positive learning rate
-            theta = theta + (alpha * delta * eligibilityTraces)
+            #theta = theta + (alpha * delta * eligibilityTraces)
+            theta = theta + currentGradient.T
         else:
             logging.warning("Learning rate Alpha can not be 0")
             sys.exit(1)
@@ -356,17 +349,13 @@ def action(G, adjnode, policy, values, unprobedNodeIndices, p = -1):
         sys.exit(1)
 
 
-def RunIteration(G, alpha_input, lambda_input, gamma_input, episodes, epochs , initialNodes, Resultfile='output_file.txt', updateType = 'qlearning', policy ='random', regularization = 'nonnegative', order = 'linear', reward_function = 'new_nodes', saveGAP = 0, current_iteration=0, p = None, target_attribute = None):
+def RunIteration(G, alpha_input, episodes, epochs , initialNodes, Resultfile='output_file.txt', updateType = 'qlearning', policy ='random', regularization = 'nonnegative', order = 'linear', reward_function = 'new_nodes', saveGAP = 0, current_iteration=0, p = None, target_attribute = None):
     theta_estimates = np.random.uniform(-0.2, 0.2,(G.get_numfeature(),))     # Initialize estimates at all 0.5
     initial_graph = G.copy()
 
     for episode in range(episodes):
         logging.info("episode: " + str(episode))
-        probed_nodes, theta, rewards = RunEpisode(G, alpha_input, lambda_input,\
-                                                  gamma_input, theta_estimates, \
-                                                  epochs, Resultfile, updateType, policy, \
-                                                  regularization, order, reward_function, saveGAP, episode, \
-                                                  current_iteration, p, target_attribute)
+        probed_nodes, theta, rewards = RunEpisode(G, alpha_input, theta_estimates, epochs, Resultfile, policy, regularization, order, reward_function, saveGAP, episode, current_iteration, p, target_attribute)
 
         theta_estimates = theta # Update value estimates
         G = initial_graph.copy() # reset G to the original sample
