@@ -22,7 +22,7 @@ FEATURES=['netdisc', 'default', 'refex', 'node2vec', 'n2v-refex', 'knn']
 def runOneTrial(model, sample_dir, realAdjList, sampleType, samplePortion, alpha, lam,
                 gamma, episodes, epochs, outfile, ite, saveGAP, feature_type, reward_function, p, decay, k, attribute_dict,
                 target_attribute, burn_in, compute_sample, sampling_method):
-
+    np.random.seed()
     logger = logging.getLogger(__name__)
     logger.info(str(ite))
     if not compute_sample:
