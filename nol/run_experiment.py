@@ -19,8 +19,8 @@ FEATURES=['netdisc', 'default', 'refex', 'node2vec', 'n2v-refex', 'knn']
 
 
 
-def runOneTrial(model, sample_dir, realAdjList, sampleType, samplePortion, alpha, lam,
-                gamma, episodes, epochs, outfile, ite, saveGAP, feature_type, reward_function, p, decay, k, attribute_dict,
+def runOneTrial(model, sample_dir, realAdjList, sampleType, samplePortion, alpha,
+                episodes, epochs, outfile, ite, saveGAP, feature_type, reward_function, p, decay, k, attribute_dict,
                 target_attribute, burn_in, compute_sample, sampling_method):
     np.random.seed()
     logger = logging.getLogger(__name__)
@@ -45,13 +45,11 @@ def runOneTrial(model, sample_dir, realAdjList, sampleType, samplePortion, alpha
 
 
     if model == 'NOL-HTR':
-        probednode, _, rewards = NOL_HTR.RunIteration(g, alpha, episodes, epochs, list(nodes), outfile, 'sarsa', model, 'no',\
-                                                            reward_function = reward_function, saveGAP = saveGAP, current_iteration=ite, p=p, k=k,\
-                                                            decay=decay, target_attribute=target_attribute)
+        probednode, _, rewards = NOL_HTR.RunIteration(g, alpha, episodes, epochs, list(nodes), outfile,  model, 'no', reward_function = reward_function, saveGAP = saveGAP, current_iteration=ite, p=p, k=k, decay=decay, target_attribute=target_attribute)
     elif model == 'svm' or model == 'knn' or model == 'linreg' or model == 'logit' or model == 'high' or model == 'low' or model == 'rand':
-        probednode, _, rewards = NOL_SK.RunIteration(g, alpha, episodes, epochs, list(nodes), outfile, 'sarsa', model, 'no', reward_function = reward_function, saveGAP = saveGAP, current_iteration=ite, p=p, decay=decay, target_attribute=target_attribute, burn_in=burn_in)
+        probednode, _, rewards = NOL_SK.RunIteration(g, alpha, episodes, epochs, list(nodes), outfile, model, 'no', reward_function = reward_function, saveGAP = saveGAP, current_iteration=ite, p=p, decay=decay, target_attribute=target_attribute, burn_in=burn_in)
     else:
-        probednode, _, rewards = NOL.RunIteration(g, alpha, lam, gamma, episodes, epochs, list(nodes), outfile, 'sarsa', model, 'no', reward_function = reward_function, saveGAP = saveGAP, current_iteration=ite, p=p, target_attribute=target_attribute)
+        probednode, _, rewards = NOL.RunIteration(g, alpha, episodes, epochs, list(nodes), outfile, model, 'no', reward_function = reward_function, saveGAP = saveGAP, current_iteration=ite, p=p, target_attribute=target_attribute)
 
 
     reward_cumulative = np.cumsum(rewards)
@@ -62,7 +60,7 @@ def runOneTrial(model, sample_dir, realAdjList, sampleType, samplePortion, alpha
     return reward_cumulative
 
 
-def runManyTrials(model, input_file, sample_type, sample_size, sample_dir, output_dir, budget, episodes, iterations, save_gap, alpha, lam, gamma,
+def runManyTrials(model, input_file, sample_type, sample_size, sample_dir, output_dir, budget, episodes, iterations, save_gap, alpha,
                   feature_type, reward_function, p, decay, k, attribute_file, target_attribute, burn_in, compute_sample, sampling_method, processes):
 
     logger = logging.getLogger(__name__)
@@ -93,7 +91,7 @@ def runManyTrials(model, input_file, sample_type, sample_size, sample_dir, outpu
         sample_dir_files = ['compute']*iterations
 
     ## filename for averaged output for this realization
-    final_table = os.path.join(output_dir, model + '_a' + str(alpha) + '_l' + str(lam) + '_g' + str(gamma) + '.csv')
+    final_table = os.path.join(output_dir, model + '_a' + str(alpha) + '.csv')
 
     logger.info("Running Model: " + model)
     logger.info("Starting network nodes: " + str(len(nodes)))
@@ -102,7 +100,7 @@ def runManyTrials(model, input_file, sample_type, sample_size, sample_dir, outpu
     if processes == 1:
         for i in range(iterations):
             logger.info("Iteration: " + str(i))
-            result = runOneTrial(model,sample_dir,realAdjList,sample_type,sample_size, alpha,lam,gamma,episodes,budget, output_dir,i,save_gap,\
+            result = runOneTrial(model,sample_dir,realAdjList,sample_type,sample_size, alpha,episodes,budget, output_dir,i,save_gap,\
                                  feature_type, reward_function, p, decay, k, attribute_dict, target_attribute, burn_in, compute_sample,
                                  sampling_method)
 
@@ -126,9 +124,9 @@ def runManyTrials(model, input_file, sample_type, sample_size, sample_dir, outpu
             row += 1
     else:
         pool = Pool(processes)
-        arguments = [(model,sample_dir,realAdjList,sample_type,sample_size, alpha,lam,gamma,episodes,budget, output_dir,i,save_gap,\
-                                 feature_type, reward_function, p, decay, k, attribute_dict, target_attribute, burn_in, compute_sample,
-                      sampling_method) for i in range(iterations)]
+        arguments = [(model, sample_dir, realAdjList, sample_type, sample_size, alpha, episodes, budget, output_dir, i, save_gap,\
+                                 feature_type, reward_function, p, decay, k, attribute_dict, target_attribute, burn_in, compute_sample, sampling_method) \
+                     for i in range(iterations)]
         results_matrix = pool.starmap(runOneTrial, arguments)
         results_avg = np.mean(results_matrix, axis=0)
         results_sd = np.std(results_matrix, axis=0)
@@ -143,7 +141,7 @@ def runManyTrials(model, input_file, sample_type, sample_size, sample_dir, outpu
 
 def experiment(model, input_directory, sample_folder, output_folder, \
                budget, episodes, iterations, networks, save_gap, \
-               alpha, lambda_, gamma, feature_type, reward_function, p, decay, k, attribute_file, target_attribute, burn_in, compute_sample,
+               alpha, feature_type, reward_function, p, decay, k, attribute_file, target_attribute, burn_in, compute_sample,
                sampling_method, processes):
     ## Get sample information
     type_regex = re.compile(r'[a-z]*-')
@@ -168,13 +166,12 @@ def experiment(model, input_directory, sample_folder, output_folder, \
         ## Run 'iterations' iterations on this network
         results_matrix = runManyTrials(model, input_file, sample_type, sample_size, sample_dir, output_dir, \
                budget, episodes, iterations, save_gap, \
-               alpha, lambda_, gamma, feature_type, reward_function, p, decay, k, attribute_file, target_attribute, burn_in, compute_sample,
+               alpha, feature_type, reward_function, p, decay, k, attribute_file, target_attribute, burn_in, compute_sample,
                                        sampling_method, processes)
 
 
 def main(args):
-    log_file = "../results/logs/outLTD_" + str(args.model) + "_" + str(args.gamma) + "_" + \
-            str(args.lambda_) + "_" + str(args.iterations) + "_" + str(args.budget)+ ".out"
+    log_file = "../results/logs/outLTD_" + str(args.model) + "_" + str(args.iterations) + "_" + str(args.budget)+ ".out"
     logging.basicConfig(filename=log_file, level=logging.DEBUG)
     if args.ktype == 'int':
         k = int(args.k)
@@ -182,7 +179,7 @@ def main(args):
         k = eval(args.k)
     experiment(args.model, args.input_directory, args.sample_folder, args.output_folder,
                   args.budget, args.episodes, args.iterations, args.networks, args.save_gap,
-                  args.alpha, args.lambda_, args.gamma, args.feature_type, args.reward_function, args.p, args.decay, k, args.attribute_file,
+                  args.alpha, args.feature_type, args.reward_function, args.p, args.decay, k, args.attribute_file,
                args.target_attribute, args.burn_in, args.compute_sample, args.sampling_method, args.processes)
     logging.info("END")
 
@@ -200,9 +197,6 @@ if __name__ == '__main__':
     parser.add_argument('-e', dest='episodes', type=int, default=1, help='number of episodes')
     parser.add_argument('-b', dest='budget', type=int, help='budget of probes/number of epochs')
     parser.add_argument('--alpha', dest='alpha', type=float, default=0, help='learning rate')
-    # Underscore in lambda_ to prevent syntax conflict with Python lambda
-    parser.add_argument('--lamb', dest='lambda_', type=float, default=0, metavar='lambda', help='trace parameter')
-    parser.add_argument('--gamma', dest='gamma', type=float, default=0, help='discount factor')
     parser.add_argument('--feats', dest='feature_type', choices=FEATURES,
                         help='default, refex or node2vec features')
     parser.add_argument('--reward', dest='reward_function', choices=['new_nodes', 'new_edges', 'nodes_and_triangles', 'new_nodes_local', 'attribute'],

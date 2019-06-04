@@ -16,8 +16,7 @@ from sklearn.linear_model import LinearRegression
 from puAdapter import *
 
 
-def RunEpisode(G, alpha, lambda_, gamma, theta, epochs, Resultfile='output_file.txt',
-             updateType='qlearning', policy='logit', regularization='nonnegative', featureOrder='linear',
+def RunEpisode(G, alpha, theta, epochs, Resultfile='output_file.txt', policy='logit', regularization='nonnegative', featureOrder='linear',
              reward_function='new_nodes', saveGap=0, episode=0, iteration=0, p = None, decay=0, target_attribute = None, burn_in=0):
     if policy not in ['high', 'low', 'rand']:
         features = G.calculate_features(G, featureOrder)
@@ -488,8 +487,7 @@ def action(G, policy, values, unprobedNodeIndices, p = -1):
         idx = np.random.choice(unprobedNodeList, 1)[0]
         return idx, True
 
-def RunIteration(G, alpha_input, episodes, epochs , initialNodes, Resultfile='output_file.txt', updateType = 'qlearning',
-                 policy ='rand', regularization = 'nonnegative', order = 'linear', reward_function = 'new_nodes', saveGAP = 0, current_iteration=0,
+def RunIteration(G, alpha_input, episodes, epochs , initialNodes, Resultfile='output_file.txt', policy ='rand', regularization = 'nonnegative', order = 'linear', reward_function = 'new_nodes', saveGAP = 0, current_iteration=0,
                  p = None, decay=0, target_attribute = None, burn_in=0):
     if policy not in ['high', 'low', 'rand']:
         theta_estimates = np.random.uniform(-0.2, 0.2,(G.get_numfeature(),))     # Initialize estimates at all 0.5
@@ -500,8 +498,8 @@ def RunIteration(G, alpha_input, episodes, epochs , initialNodes, Resultfile='ou
     print(policy)
     for episode in range(episodes):
         logging.info("episode: " + str(episode))
-        probed_nodes, theta, rewards = RunEpisode(G, alpha_input, 0.0, 0.0, theta_estimates, \
-                                                  epochs, Resultfile, updateType, policy, \
+        probed_nodes, theta, rewards = RunEpisode(G, alpha_input, theta_estimates, \
+                                                  epochs, Resultfile, policy, \
                                                   regularization, order, reward_function, saveGAP, episode, \
                                                   current_iteration, p, decay, target_attribute,burn_in)
 
