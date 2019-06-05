@@ -158,7 +158,7 @@ def experiment(model, input_directory, sample_folder, output_folder, \
 
 
 def main(args):
-    log_file = "../results/logs/outLTD_" + str(args.model) + "_" + str(args.iterations) + "_" + str(args.budget)+ ".out"
+    log_file = "../results/logs/" + str(args.model) + "_" + str(args.iterations) + "_" + str(args.budget)+ ".out"
     logging.basicConfig(filename=log_file, level=logging.DEBUG)
     if args.ktype == 'int':
         k = int(args.k)
