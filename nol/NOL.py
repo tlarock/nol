@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 import numpy as np
 np.set_printoptions(precision=3, suppress=True)
-from sklearn import linear_model
-import utility
 import Network
 import sys
 import os
@@ -278,7 +276,6 @@ def action(G, policy, values, unprobedNodeIndices, p = -1):
     Returns: the next action (node index to probe) dictated by the policy.
     """
     idx = []
-    restart_probability = utility.getProbRestart()
     unprobedNodeList = [row for row in G.row_to_node.keys() if row in unprobedNodeIndices]
     if policy == 'globalmax_jump':
         prob = np.random.random()

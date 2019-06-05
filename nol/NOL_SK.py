@@ -3,7 +3,6 @@
 import numpy as np
 np.set_printoptions(precision=3, suppress=True)
 from sklearn import linear_model
-import utility
 import Network
 import sys
 import os
@@ -471,7 +470,6 @@ def action(G, policy, values, unprobedNodeIndices, p = -1):
     node is selected.
     """
     idx = []
-    restart_probability = utility.getProbRestart()
     unprobedNodeList = [row for row in unprobedNodeIndices]
     prob = np.random.random()
     if prob > p and policy != 'rand':
