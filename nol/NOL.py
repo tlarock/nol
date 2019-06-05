@@ -36,7 +36,7 @@ def RunEpisode(G, alpha, theta, epochs, Resultfile='output_file.txt', policy='ra
     intermediate_result_dir = os.path.join(Resultfile, 'intermediate_results')
     if not os.path.exists(intermediate_result_dir):
         os.makedirs(intermediate_result_dir)
-    intermediate_name = os.path.join(intermediate_result_dir, 'LTD_'+ policy + '_iter' + str(iteration) +
+    intermediate_name = os.path.join(intermediate_result_dir, policy + '_iter' + str(iteration) +
                                      '_a' + str(alpha) + '_episode_' + str(episode) +
                                      '_intermediate.txt')
     intermediateFile = open(intermediate_name, 'w+')
@@ -47,7 +47,7 @@ def RunEpisode(G, alpha, theta, epochs, Resultfile='output_file.txt', policy='ra
     intermediate_graph_dir = os.path.join(Resultfile, 'intermediate_graphs')
     if not os.path.exists(intermediate_graph_dir):
         os.makedirs(intermediate_graph_dir)
-    intermediateGraphFile = os.path.join(intermediate_graph_dir, 'LTD_' + policy +
+    intermediateGraphFile = os.path.join(intermediate_graph_dir, policy +
                                                 '_iter' + str(iteration) +
                                                 '_a' + str(alpha) + '_episode_' + str(episode) +
                                                 '_intermediate_graph_')

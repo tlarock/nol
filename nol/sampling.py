@@ -10,7 +10,7 @@ import os, sys, numpy as np
 import networkx as nx
 
 
-def generate_sample(G, sampling_method, p=0.01, attribute_dict=None, target_att=None, k=5, interval=500):
+def generate_sample(G, sampling_method, p=0.01, attribute_dict=None, target_att=None, k=5, interval=500, max_tries=5):
     """
     Args:
         G: Adjacency list representation of the graph
@@ -23,7 +23,7 @@ def generate_sample(G, sampling_method, p=0.01, attribute_dict=None, target_att=
         raise ValueError("generateNodeSample: portion of network to sample invalid (must be between 0 and 1).  No sample was generated.")
 
     if sampling_method.lower() == 'node':
-        return node_sample(G, p, interval)
+        return node_sample(G, p, interval, max_tries)
     elif sampling_method.lower() == 'netdisc':
         return netdisc_sample(G, attribute_dict, target_att, k)
     elif sampling_method.lower() == 'iknn':
@@ -99,7 +99,7 @@ def netdisc_sample(adjacency_list, attribute_dict, target_att, k):
 
     return sample_adjlist, nodes, edges
 
-def node_sample(adjacency_list, p, interval):
+def node_sample(adjacency_list, p, interval, max_tries):
     def induce_subgraph(adjacency_list, nodes):
         sample_adjacency = dict()
         edges = set()
@@ -119,6 +119,7 @@ def node_sample(adjacency_list, p, interval):
     desired_num_edges = int(p * number_of_edges)
 
     i=1
+    tries = 0
     sample_num_edges = 0
     while sample_num_edges < desired_num_edges:
         sampled_nodes = set(np.random.choice(list(adjacency_list.keys()),interval*i, replace=False))
@@ -133,6 +134,11 @@ def node_sample(adjacency_list, p, interval):
                 i = i - 1
             else:
                 i = i - 2
+            tries += 1
+
+        if tries == max_tries:
+            interval = int(interval/2.0)
+            tries = 0
 
     return sample_adjlist, sampled_nodes, edges
 

@@ -23,13 +23,14 @@ num_probes = 5000
 
 sample_dir = 'node-sample-0.01/'
 plots_base = '../results/plots/cumulative_reward/'
-results_base = '../results/synthetic/'
+results_base = '../results/'
 name = 'ba-graph_N-10000_m-5_m0-5/'
 name = 'N-10000_maxcc-0.95_maxgcc-0.15_avgDeg-10/'
 
 names = {
-    'ba-graph_N-10000_m-5_m0-5/':'BA',
-    'N-10000_maxcc-0.95_maxgcc-0.15_avgDeg-10/':'BTER'
+    'synthetic/ba-graph_N-10000_m-5_m0-5/':'BA',
+    'synthetic/N-10000_maxcc-0.95_maxgcc-0.15_avgDeg-10/':'BTER',
+    'dblp/':'DBLP'
 }
 
 for name in names:
@@ -37,8 +38,8 @@ for name in names:
 
     nonpara_results = '/Users/larock/git/nol/baseline/net_complete/mab_explorer/results/ba_rn_results'
     input_files = [
-            (input_dir + 'default-new_nodes-NOL-epsilon-0.3-decay-1/network1/.csv', r'NOL($\epsilon=0.3$)', '-'),
-            (input_dir + 'default-new_nodes-NOL-HTR-epsilon-0.3-decay-1/network1/NOL-HTR_a0.01.csv', r'NOL-HTR($\epsilon_0=0.3$,$k=\ln(n)$)', '-'),
+            (input_dir + 'default-new_nodes-NOL-epsilon-0.3-decay-0/network1/NOL_a0.01.csv', r'NOL($\epsilon=0.3$)', '-'),
+            (input_dir + 'default-new_nodes-NOL-HTR-epsilon-0.3-decay-0/network1/NOL-HTR_a0.01.csv', r'NOL-HTR($\epsilon_0=0.3$,$k=\ln(n)$)', '-'),
             #(nonpara_results + '_KNN-UCB.csv', r'KNN($k=20$)-UCB($\alpha=2.0$)', '-'),
             (input_dir + 'baseline-new_nodes-rand/network1/rand_a0.csv', 'Random', '-'),
             (input_dir + 'baseline-new_nodes-high-jump//network1/high_a0.csv', 'High + Jump', '-'),
@@ -74,7 +75,6 @@ for name in names:
         print('label ' + str(input_files[i][1]) + ' max: ' + str(max(df['AvgRewards'][start_probe:num_probes])))
 
     if df is not None:
-        title = str(name) + ' network'
         out_reward_name = 'new-nodes'
 
         if N == 1:
@@ -82,8 +82,6 @@ for name in names:
         else:
             plt.xlabel('% Nodes Probed')
         plt.ylabel(r'Avg $c_r(t)$')
-        #plt.ylabel('Average Cumulative Reward')
-        #leg = plt.legend(frameon=False)
         if legend:
             leg = plt.legend()
             # set the linewidth of each legend object
