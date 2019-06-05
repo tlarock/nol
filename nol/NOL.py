@@ -8,7 +8,7 @@ import os
 import logging
 
 
-def RunEpisode(G, alpha, theta, epochs, Resultfile='output_file.txt', policy='random', regularization='nonnegative', featureOrder='linear',
+def RunEpisode(G, alpha, theta, epochs, Resultfile='output_file.txt', policy='NOL', regularization='nonnegative', featureOrder='linear',
              reward_function='new_nodes', saveGap=0, episode=0, iteration=0, p = None, target_attribute = None):
     features = G.calculate_features(G, featureOrder)
     values = features.dot(theta)
@@ -36,7 +36,7 @@ def RunEpisode(G, alpha, theta, epochs, Resultfile='output_file.txt', policy='ra
     intermediate_result_dir = os.path.join(Resultfile, 'intermediate_results')
     if not os.path.exists(intermediate_result_dir):
         os.makedirs(intermediate_result_dir)
-    intermediate_name = os.path.join(intermediate_result_dir, 'LTD_'+ policy + '_iter' + str(iteration) +
+    intermediate_name = os.path.join(intermediate_result_dir, policy + '_iter' + str(iteration) +
                                      '_a' + str(alpha) + '_episode_' + str(episode) +
                                      '_intermediate.txt')
     intermediateFile = open(intermediate_name, 'w+')
@@ -47,7 +47,7 @@ def RunEpisode(G, alpha, theta, epochs, Resultfile='output_file.txt', policy='ra
     intermediate_graph_dir = os.path.join(Resultfile, 'intermediate_graphs')
     if not os.path.exists(intermediate_graph_dir):
         os.makedirs(intermediate_graph_dir)
-    intermediateGraphFile = os.path.join(intermediate_graph_dir, 'LTD_' + policy +
+    intermediateGraphFile = os.path.join(intermediate_graph_dir, policy +
                                                 '_iter' + str(iteration) +
                                                 '_a' + str(alpha) + '_episode_' + str(episode) +
                                                 '_intermediate_graph_')
@@ -195,7 +195,7 @@ def RunEpisode(G, alpha, theta, epochs, Resultfile='output_file.txt', policy='ra
         if alpha > 0:
             ## regular learning with positive learning rate
             #theta = theta + (alpha * delta * eligibilityTraces)
-            theta = theta + currentGradient.T
+            theta = theta + alpha*delta*currentGradient.T
         else:
             logging.warning("Learning rate Alpha can not be 0")
             sys.exit(1)
@@ -264,21 +264,21 @@ def action(G, policy, values, unprobedNodeIndices, p = -1):
     unprobedNodeList = [row for row in G.row_to_node.keys() if row in unprobedNodeIndices]
     if policy == 'globalmax_jump':
         prob = np.random.random()
-        ## With probability p, follow global max
+        ## With probability 1-p, follow global max
         if prob > p:
             idx = np.argmax(values[unprobedNodeList])
             return unprobedNodeList[idx], False
         else:
-            ## with probability 1-p, pick a node at random
+            ## with probability p, pick a node at random
             return np.random.choice(unprobedNodeList, 1)[0], True
     elif policy == 'NOL':
         prob = np.random.random()
-        ## With probability p, follow global max
+        ## With probability 1-p, follow global max
         if prob > p:
             idx = np.argmax(values[unprobedNodeList])
             return unprobedNodeList[idx], False
         else:
-            ## with probability 1-p, pick a node at random
+            ## with probabilit p, pick a node at random
             ## Until there are none left, pick nodes from
             # the initial sample
             not_probed_initial = list(G.original_node_set - G.probedNodeSet)
@@ -292,7 +292,7 @@ def action(G, policy, values, unprobedNodeIndices, p = -1):
         sys.exit(1)
 
 
-def RunIteration(G, alpha_input, episodes, epochs , initialNodes, Resultfile='output_file.txt', policy ='random', regularization = 'nonnegative', order = 'linear', reward_function = 'new_nodes', saveGAP = 0, current_iteration=0, p = None, target_attribute = None):
+def RunIteration(G, alpha_input, episodes, epochs , initialNodes, Resultfile='output_file.txt', policy='NOL', regularization = 'nonnegative', order = 'linear', reward_function = 'new_nodes', saveGAP = 0, current_iteration=0, p = None, target_attribute = None):
     theta_estimates = np.random.uniform(-0.2, 0.2,(G.get_numfeature(),))     # Initialize estimates at all 0.5
     initial_graph = G.copy()
 

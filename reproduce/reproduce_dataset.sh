@@ -4,7 +4,7 @@ set -ex
 
 dataset=$1
 sample_para=0.01
-iterations='10'
+iterations='2'
 budget='5000'
 alpha=0.01
 featuretype='default'
@@ -48,31 +48,32 @@ sample_dir=${base_sample}${sample_para}
 
 ## NOL(\epsilon=0.3)
 output_folder=${base_output}${sample_para}/${featuretype}-${rewardfunction}'-NOL-epsilon-'${epsilon}-decay-$decay/
+log_file=../results/logs/NOL-${dataset}.out
 
-python3 ../nol/run_experiment.py -m NOL -i $base_input -s $sample_dir -o $output_folder -n 1 -iter $iterations -b $budget --alpha $alpha --feats $featuretype --reward $rewardfunction --save_gap $savegap -p $epsilon --decay $decay --burn $burnin --sampling-method $sampling_method --processes $processes &
+python3 ../nol/run_experiment.py -m NOL -i $base_input -s $sample_dir -o $output_folder -n 1 -iter $iterations -b $budget --alpha $alpha --feats $featuretype --reward $rewardfunction --save_gap $savegap -p $epsilon --decay $decay --burn $burnin --sampling-method $sampling_method --processes $processes --log $log_file &
 
 
 ## NOL-HTR(\epsilon=0.3, k=ln(n))
 ktype=funct
 k=np.log
 output_folder=${base_output}${sample_para}/${featuretype}-${rewardfunction}'-NOL-HTR-epsilon-'${epsilon}-decay-$decay/
-
-python3 ../nol/run_experiment.py -m NOL-HTR -i $base_input -s $sample_dir -o $output_folder -n 1 -iter $iterations -b $budget --alpha $alpha --feats $featuretype --reward $rewardfunction --save_gap $savegap -p $epsilon --decay $decay --ktype $ktype -k $k --burn $burnin --sampling-method $sampling_method --processes $processes &
+log_file=../results/logs/NOL-HTR-${dataset}.out
+python3 ../nol/run_experiment.py -m NOL-HTR -i $base_input -s $sample_dir -o $output_folder -n 1 -iter $iterations -b $budget --alpha $alpha --feats $featuretype --reward $rewardfunction --save_gap $savegap -p $epsilon --decay $decay --ktype $ktype -k $k --burn $burnin --sampling-method $sampling_method --processes $processes --log $log_file &
 
 ## Random
 output_folder=${base_output}${sample_para}/baseline-${rewardfunction}'-rand/'
-
-python3 ../nol/run_experiment.py -m rand -i $base_input -s $sample_dir -o $output_folder -n 1 -iter $iterations -b $budget --reward $rewardfunction --save_gap $savegap --sampling-method $sampling_method --processes $processes &
+log_file=../results/logs/rand-${dataset}.out
+python3 ../nol/run_experiment.py -m rand -i $base_input -s $sample_dir -o $output_folder -n 1 -iter $iterations -b $budget --reward $rewardfunction --save_gap $savegap --sampling-method $sampling_method --processes $processes --log $log_file &
 
 ## High
 output_folder=${base_output}${sample_para}/baseline-${rewardfunction}'-high/'
-
-python3 ../nol/run_experiment.py -m high -i $base_input -s $sample_dir -o $output_folder -n 1 -iter $iterations -b $budget --reward $rewardfunction --save_gap $savegap --sampling-method $sampling_method --processes $processes &
+log_file=../results/logs/high-${dataset}.out
+python3 ../nol/run_experiment.py -m high -i $base_input -s $sample_dir -o $output_folder -n 1 -iter $iterations -b $budget --reward $rewardfunction --save_gap $savegap --sampling-method $sampling_method --processes $processes --log $log_file &
 
 ## High-jump
 output_folder=${base_output}${sample_para}/baseline-${rewardfunction}'-high-jump/'
-
-python3 ../nol/run_experiment.py -m high -p ${epsilon} -i $base_input -s $sample_dir -o $output_folder -n 1 -iter $iterations -b $budget --reward $rewardfunction --save_gap $savegap --processes $processes &
+log_file=../results/logs/high-jump-${dataset}.out
+python3 ../nol/run_experiment.py -m high -p ${epsilon} -i $base_input -s $sample_dir -o $output_folder -n 1 -iter $iterations -b $budget --reward $rewardfunction --save_gap $savegap --processes $processes --log $log_file &
 
 if [ $3 == 'wait' ]
 then

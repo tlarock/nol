@@ -158,7 +158,11 @@ def experiment(model, input_directory, sample_folder, output_folder, \
 
 
 def main(args):
-    log_file = "../results/logs/outLTD_" + str(args.model) + "_" + str(args.iterations) + "_" + str(args.budget)+ ".out"
+    if not args.log_file:
+        log_file = "../results/logs/" + str(args.model) + "_" + str(args.iterations) + "_" + str(args.budget)+ ".out"
+    else:
+        log_file = args.log_file
+
     logging.basicConfig(filename=log_file, level=logging.DEBUG)
     if args.ktype == 'int':
         k = int(args.k)
@@ -196,5 +200,6 @@ if __name__ == '__main__':
     parser.add_argument('--burn', dest='burn_in', type=int, default=0, help='# of high degree burn-in pulls to make')
     parser.add_argument('--sampling-method', dest='sampling_method', type=str, default='node', choices=['node', 'netdisc', 'randomwalk'], help='Flag to compute the sample rather than read it.')
     parser.add_argument('--processes', dest='processes', type=int, default=1, help='# of proceses to use (default 1, no multiproc)')
+    parser.add_argument('--log', dest='log_file', type=str, default=None, help='(optional) path to log file')
 
     main(parser.parse_args())

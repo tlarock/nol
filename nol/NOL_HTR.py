@@ -11,7 +11,6 @@ from scipy import stats
 def RunEpisode(G, alpha, theta, epochs, Resultfile='output_file.txt',
              policy='random', regularization='nonnegative', featureOrder='linear',
              reward_function='new_nodes', saveGap=0, episode=0, iteration=0, p = None, decay=0, k=4, target_attribute = None):
-    print(policy)
     features = G.calculate_features(G, featureOrder)
     values = features.dot(theta)
     ## TODO Adhoc
@@ -38,7 +37,7 @@ def RunEpisode(G, alpha, theta, epochs, Resultfile='output_file.txt',
     intermediate_result_dir = os.path.join(Resultfile, 'intermediate_results')
     if not os.path.exists(intermediate_result_dir):
         os.makedirs(intermediate_result_dir)
-    intermediate_name = os.path.join(intermediate_result_dir, 'LTD_'+ policy + '_iter' + str(iteration) +
+    intermediate_name = os.path.join(intermediate_result_dir, policy + '_iter' + str(iteration) +
                                      '_a' + str(alpha) + '_episode_' + str(episode) +
                                      '_intermediate.txt')
     intermediateFile = open(intermediate_name, 'w+')
@@ -49,7 +48,7 @@ def RunEpisode(G, alpha, theta, epochs, Resultfile='output_file.txt',
     intermediate_graph_dir = os.path.join(Resultfile, 'intermediate_graphs')
     if not os.path.exists(intermediate_graph_dir):
         os.makedirs(intermediate_graph_dir)
-    intermediateGraphFile = os.path.join(intermediate_graph_dir, 'LTD_' + policy +
+    intermediateGraphFile = os.path.join(intermediate_graph_dir, policy +
                                                 '_iter' + str(iteration) +
                                                 '_a' + str(alpha) + '_episode_' + str(episode) +
                                                 '_intermediate_graph_')
@@ -246,13 +245,6 @@ def RunEpisode(G, alpha, theta, epochs, Resultfile='output_file.txt',
                 for key2, val2 in val.items():
                     Ftemp.write(str(key) + ' ' + str(key2) + '\n')
             Ftemp.close()
-            # Snapshot of feature matrix, to be used with SummarizeFeatures.py
-            #featureFileDir = '../results/feature_analysis/'
-            featureFileName = 'FeaturesLTD_' + str(policy) + '_iter' + str(iteration) +\
-                              '_a' + str(alpha) + '_episode' + str(episode) +\
-                              '_epoch' + str(epoch)
-            featureFile = os.path.abspath(os.path.join(featureFileDir, featureFileName))
-            np.savetxt(featureFile,features)
 
         graphSaveInterval += 1
 
@@ -261,20 +253,6 @@ def RunEpisode(G, alpha, theta, epochs, Resultfile='output_file.txt',
 
     intermediateFile.close()
     print(sum(rewards))
-    ## TODO ad hoc
-    reward_dist_file = 'reward_dist_' + str(policy) + '_iter' + str(iteration) +\
-                          '_a' + str(alpha) + '_episode' + str(episode) +\
-                          '_epoch' + str(epoch)
-
-    with open(os.path.abspath(os.path.join(featureFileDir, reward_dist_file)) + '.csv', 'w') as f:
-        for i in range(len(rewards_list)):
-            for j in range(len(rewards_list[i])):
-                if j < len(rewards_list[i]) - 1:
-                    f.write(str(rewards_list[i][j]) + ',')
-                else:
-                    f.write(str(rewards_list[i][j]) + '\n')
-
-
 
     logging.info('Total reward: ' + str(sum(rewards)))
     return probedNodes, theta, rewards
