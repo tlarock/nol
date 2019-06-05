@@ -57,8 +57,6 @@ def RunEpisode(G, alpha, theta, epochs, Resultfile='output_file.txt', policy='ra
 
     rewards = []
 
-    ## TODO FIXME Add burn-in phase code back in around here.
-
     count = 0
     interval = 500
     for epoch in range(epochs):
@@ -67,7 +65,6 @@ def RunEpisode(G, alpha, theta, epochs, Resultfile='output_file.txt', policy='ra
         rewards_list.append([(len(G.complete_graph_adjlist[node]) - len(G.sample_adjlist_sets[node])) for node in unprobedNodeSet])
 
 
-        # print for logging purposes...
         if count == interval:
             count = 0
             logging.info('Iteration: ' + str(iteration) + ' Epoch: ' + str(epoch))
@@ -153,19 +150,7 @@ def RunEpisode(G, alpha, theta, epochs, Resultfile='output_file.txt', policy='ra
         elif reward_function == 'attribute':
             absoluteReward = len(targetNodeSet) - initialTargetNodes - numberOfTargetNodes
 
-        ## TODO since we aren't using a reward transformation (i.e. log(reward)), 
-        ## do not need use this for now
-        if reward_function == 'new_nodes_local':
-            reward = absoluteReward
-            ## TODO This is ad hoc, but since I want to compare
-            ## with the other new node reward, I am going to output
-            ## the reward - the rewardCounts, and use the reward + rewardCounts
-            ## to update the weights
-            #if G.rewardCounts[probedNode] > 0:
-            #    absoluteReward = reward - np.log2(G.rewardCounts[probedNode])
-            absoluteReward = reward - G.rewardCounts[probedNode]
-        else:
-            reward = absoluteReward
+        reward = absoluteReward
 
         ## Update reward
         rewards.append(absoluteReward)

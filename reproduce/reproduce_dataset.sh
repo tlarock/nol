@@ -14,7 +14,7 @@ epsilon=0.3
 decay=0
 burnin=0
 sampling_method=node
-processes=1
+processes=$2
 
 case ${dataset} in 'ba')
 	data_dir='synthetic/ba-graph_N-10000_m-5_m0-5/';;
@@ -22,6 +22,14 @@ case ${dataset} in 'ba')
 	data_dir='synthetic/N-10000_maxcc-0.95_maxgcc-0.15_avgDeg-10/';;
 'er')
 	data_dir='synthetic/er-graph_N-10000_p-0.001/';;
+'lfr-1')
+	data_dir='synthetic/lfr-graph_N-34546_mu-0.1/';;
+'lfr-2')
+	data_dir='synthetic/lfr-graph_N-34546_mu-0.2/';;
+'lfr-3')
+	data_dir='synthetic/lfr-graph_N-34546_mu-0.3/';;
+'lfr-4')
+	data_dir='synthetic/lfr-graph_N-34546_mu-0.4/';;
 'dblp')
 	data_dir='dblp/'
 	budget=4000;;
