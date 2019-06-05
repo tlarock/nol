@@ -38,8 +38,8 @@ for name in names:
 
     nonpara_results = '/Users/larock/git/nol/baseline/net_complete/mab_explorer/results/ba_rn_results'
     input_files = [
-            (input_dir + 'default-new_nodes-NOL-epsilon-0.3-decay-0/network1/NOL_a0.01.csv', r'NOL($\epsilon=0.3$)', '-'),
-            (input_dir + 'default-new_nodes-NOL-HTR-epsilon-0.3-decay-0/network1/NOL-HTR_a0.01.csv', r'NOL-HTR($\epsilon_0=0.3$,$k=\ln(n)$)', '-'),
+            (input_dir + 'default-new_nodes-NOL-epsilon-0.3-decay-1/network1/NOL_a0.01.csv', r'NOL($\epsilon=0.3$)', '-'),
+            (input_dir + 'default-new_nodes-NOL-HTR-epsilon-0.3-decay-1/network1/NOL-HTR_a0.01.csv', r'NOL-HTR($\epsilon_0=0.3$,$k=\ln(n)$)', '-'),
             #(nonpara_results + '_KNN-UCB.csv', r'KNN($k=20$)-UCB($\alpha=2.0$)', '-'),
             (input_dir + 'baseline-new_nodes-rand/network1/rand_a0.csv', 'Random', '-'),
             (input_dir + 'baseline-new_nodes-high-jump//network1/high_a0.csv', 'High + Jump', '-'),
