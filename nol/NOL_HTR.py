@@ -44,10 +44,7 @@ def RunEpisode(G, alpha, theta, epochs, Resultfile='output_file.txt',
                                      '_a' + str(alpha) + '_episode_' + str(episode) +
                                      '_intermediate.txt')
     intermediateFile = open(intermediate_name, 'w+')
-    if policy == 'globalmax_adaptive':
-        intermediateFile.write('Epoch left' + '\t' + 'G_t' + '\t'+ 'V_t'+ '\t'+ 'Error = Actual-prediction' + '\t' + 'RegressionError' + '\t' + 'Rewards in each step' + '\t' + 'jump' + '\t' + 'p' + '\t' + 'f' + '\t' + 'delta' + '\t' + 'value_MSE')
-    else:
-        intermediateFile.write('Epoch left' + '\t' + 'G_t' + '\t'+ 'V_t'+ '\t'+ 'Error = Actual-prediction' + '\t' + 'RegressionError' + '\t' + 'Rewards in each step' + '\t' + 'jump' + '\t' + 'value_MSE' + '\t' + 'theta_diff')
+    intermediateFile.write('Epoch left' + '\t' + 'G_t' + '\t'+ 'V_t'+ '\t'+ 'Error = Actual-prediction' + '\t' + 'RegressionError' + '\t' + 'Rewards in each step' + '\t' + 'jump' + '\t' + 'value_MSE' + '\t' + 'theta_diff')
     for i in range(theta.shape[0]):
         intermediateFile.write('\tTheta[' + str(i) + ']')
     intermediateFile.write('\n')
@@ -215,18 +212,6 @@ def RunEpisode(G, alpha, theta, epochs, Resultfile='output_file.txt',
         values = features.dot(theta)
         ## Get MSE between old and new values
         MSE = sum([(old_values[i]-values[i])**2 for i in range(old_values.shape[0])])
-        if policy == 'globalmax_adaptive':
-            adaptive_delta = 1.0 / len(unprobedNodeIndices)
-            #std_alpha = 0.0
-            #pos_values = values[np.where(values>0)]
-            #if len(pos_values[pos_values> (pos_values.mean() + std_alpha*pos_values.std())]) > 0:
-            #    adaptive_delta = 1.0 / len(pos_values[pos_values> (pos_values.mean() + std_alpha*pos_values.std())])
-            #else:
-            #    ## default to 1 / #actions
-            #    adaptive_delta = 1.0 / len(unprobedNodeIndices)
-
-            sigma = 0.1
-            p,f = update_p(G, adjacentNodeIndex, values, unprobedNodeIndices, p, delta, alpha, sigma, adaptive_delta)
 
         ## TODO ad-hoc p decay
         if decay == 1:
@@ -235,23 +220,17 @@ def RunEpisode(G, alpha, theta, epochs, Resultfile='output_file.txt',
             p = original_p * (np.exp(-1*epoch/epochs))
 
         # writting intermediate numbers
-        if policy == 'globalmax_restart' or policy == 'globalmax_jump' or policy == 'globalmax_smartjump':
+        if policy == 'NOL' or policy == 'globalmax_jump':
             ## print a 1 if a random node was chosen, a 0 if the model was followed
             if jump is True:
                 jval = 1
             elif jump is False:
                 jval = 0
             else:
-                logging.info('SOMETHING IS WRONG WITH JUMP SWITCH!')
-
+                jval = -1
         try:
             # write intermediate numbers
-            if policy == 'globalmax_adaptive':
-                intermediateFile.write(str(epoch) + '\t' + str(estimatedReward) + '\t' +
-                    str(currentValue)  + '\t'+ str(delta) + '\t' +  str(delta) + '\t' + str(reward)
-                    + '\t' + str(jump) + '\t' + str(p) + '\t' + str(f) + '\t' + str(adaptive_delta) + '\t' + str(MSE))
-            else:
-                intermediateFile.write(str(epoch) + '\t' + str(estimatedReward) + '\t' + str(currentValue)  + '\t'+ str(delta) + '\t' +  str(delta) +
+            intermediateFile.write(str(epoch) + '\t' + str(estimatedReward) + '\t' + str(currentValue)  + '\t'+ str(delta) + '\t' +  str(delta) +
                                        '\t' + str(reward) + '\t' + str(jump) + '\t' + str(MSE) + '\t' + str(theta_diff))
 
             for i in range(theta.shape[0]):
@@ -301,16 +280,6 @@ def RunEpisode(G, alpha, theta, epochs, Resultfile='output_file.txt',
 
     logging.info('Total reward: ' + str(sum(rewards)))
     return probedNodes, theta, rewards
-
-
-def update_p(G, adjnode, values, unprobedNodeIndices, p, td_error, alpha, sigma, delta):
-    idx = []
-    restart_probability = utility.getProbRestart()
-    unprobedNodeList = [row for row in G.row_to_node.keys() if row in unprobedNodeIndices]
-    f = (1 - np.exp( (-alpha*td_error) / sigma)) / (1 + np.exp( (-alpha*td_error) / sigma))
-    p = delta * f + (1-delta)*p
-    return p, f
-
 
 
 def median_of_means(samples_mat, theta, alpha, delta, regularization, k_input, confidence=0.05, lambda_regres=0.0, number_unprobed=0):

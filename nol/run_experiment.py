@@ -13,26 +13,21 @@ from multiprocessing import Pool
 from utility import read_network
 from utility import read_attributes
 
-MODELS=['globalrandom_jump','localrandom_jump','globalmax','globalmax_jump', 'globalmax_restart',
-        'localmax','globalrandom','localrandom','globalmax_smartjump', 'globalmax_adaptive', 'NOL-HTR', 'logit', 'svm', 'knn', 'linreg', 'high', 'low', 'rand']
+MODELS=['globalmax_jump', 'NOL','NOL-HTR', 'logit', 'svm', 'knn', 'linreg', 'high', 'low', 'rand']
 FEATURES=['netdisc', 'default', 'refex', 'node2vec', 'n2v-refex', 'knn']
 
 
 
 def runOneTrial(model, sample_dir, realAdjList, sampleType, samplePortion, alpha,
                 episodes, epochs, outfile, ite, saveGAP, feature_type, reward_function, p, decay, k, attribute_dict,
-                target_attribute, burn_in, compute_sample, sampling_method):
+                target_attribute, burn_in, sampling_method):
     np.random.seed()
     logger = logging.getLogger(__name__)
     logger.info(str(ite))
-    if not compute_sample:
-        sample = os.path.join(sample_dir,'*_'+str(ite)+'_'+str(sampleType)+'-*'+str(samplePortion)+'*')
-        sampleAdjList, nodes, edges = read_network(min(glob.glob(sample), key=len))
-    else:
-        if sampling_method == 'netdisc':
-            sampleAdjList, nodes, edges = generate_sample(realAdjList, 'netdisc', attribute_dict, target_attribute, 5)
-        elif sampling_method == 'node':
-            sampleAdjList, nodes, edges = generate_sample(realAdjList, 'node', float(samplePortion))
+    if sampling_method == 'netdisc':
+        sampleAdjList, nodes, edges = generate_sample(realAdjList, 'netdisc', attribute_dict, target_attribute, 5)
+    elif sampling_method == 'node':
+        sampleAdjList, nodes, edges = generate_sample(realAdjList, 'node', float(samplePortion))
 
 
     logger.info("Starting sample nodes: " + str(len(nodes)))
@@ -61,7 +56,7 @@ def runOneTrial(model, sample_dir, realAdjList, sampleType, samplePortion, alpha
 
 
 def runManyTrials(model, input_file, sample_type, sample_size, sample_dir, output_dir, budget, episodes, iterations, save_gap, alpha,
-                  feature_type, reward_function, p, decay, k, attribute_file, target_attribute, burn_in, compute_sample, sampling_method, processes):
+                  feature_type, reward_function, p, decay, k, attribute_file, target_attribute, burn_in, sampling_method, processes):
 
     logger = logging.getLogger(__name__)
 
@@ -101,8 +96,7 @@ def runManyTrials(model, input_file, sample_type, sample_size, sample_dir, outpu
         for i in range(iterations):
             logger.info("Iteration: " + str(i))
             result = runOneTrial(model,sample_dir,realAdjList,sample_type,sample_size, alpha,episodes,budget, output_dir,i,save_gap,\
-                                 feature_type, reward_function, p, decay, k, attribute_dict, target_attribute, burn_in, compute_sample,
-                                 sampling_method)
+                                 feature_type, reward_function, p, decay, k, attribute_dict, target_attribute, burn_in, sampling_method)
 
             results_matrix.append(np.array(result))
             # Compute and output averages after every iteration (so as to not lose data if
@@ -125,7 +119,7 @@ def runManyTrials(model, input_file, sample_type, sample_size, sample_dir, outpu
     else:
         pool = Pool(processes)
         arguments = [(model, sample_dir, realAdjList, sample_type, sample_size, alpha, episodes, budget, output_dir, i, save_gap,\
-                                 feature_type, reward_function, p, decay, k, attribute_dict, target_attribute, burn_in, compute_sample, sampling_method) \
+                                 feature_type, reward_function, p, decay, k, attribute_dict, target_attribute, burn_in, sampling_method) \
                      for i in range(iterations)]
         results_matrix = pool.starmap(runOneTrial, arguments)
         results_avg = np.mean(results_matrix, axis=0)
@@ -141,19 +135,13 @@ def runManyTrials(model, input_file, sample_type, sample_size, sample_dir, outpu
 
 def experiment(model, input_directory, sample_folder, output_folder, \
                budget, episodes, iterations, networks, save_gap, \
-               alpha, feature_type, reward_function, p, decay, k, attribute_file, target_attribute, burn_in, compute_sample,
-               sampling_method, processes):
+               alpha, feature_type, reward_function, p, decay, k, attribute_file, target_attribute, burn_in, sampling_method, processes):
     ## Get sample information
     type_regex = re.compile(r'[a-z]*-')
     size_regex = re.compile(r'[0-9][.][0-9]+')
 
     sample_type = re.findall(type_regex, sample_folder)[0].split('-')[0]
     sample_size = re.findall(size_regex, sample_folder)[0]
-
-    if compute_sample == 'True':
-        compute_sample = True
-    elif compute_sample == 'False':
-        compute_sample = False
 
     ## For every network
     for i in range(1, networks+1):
@@ -166,8 +154,7 @@ def experiment(model, input_directory, sample_folder, output_folder, \
         ## Run 'iterations' iterations on this network
         results_matrix = runManyTrials(model, input_file, sample_type, sample_size, sample_dir, output_dir, \
                budget, episodes, iterations, save_gap, \
-               alpha, feature_type, reward_function, p, decay, k, attribute_file, target_attribute, burn_in, compute_sample,
-                                       sampling_method, processes)
+               alpha, feature_type, reward_function, p, decay, k, attribute_file, target_attribute, burn_in, sampling_method, processes)
 
 
 def main(args):
@@ -180,7 +167,7 @@ def main(args):
     experiment(args.model, args.input_directory, args.sample_folder, args.output_folder,
                   args.budget, args.episodes, args.iterations, args.networks, args.save_gap,
                   args.alpha, args.feature_type, args.reward_function, args.p, args.decay, k, args.attribute_file,
-               args.target_attribute, args.burn_in, args.compute_sample, args.sampling_method, args.processes)
+               args.target_attribute, args.burn_in, args.sampling_method, args.processes)
     logging.info("END")
 
 if __name__ == '__main__':
@@ -207,7 +194,6 @@ if __name__ == '__main__':
     parser.add_argument('--ktype', dest='ktype', default='int', choices=['funct', 'int', 'delta'])
     parser.add_argument('-k', dest='k', type=str, default=1, help='k for NOL-HTR.')
     parser.add_argument('--burn', dest='burn_in', type=int, default=0, help='# of high degree burn-in pulls to make')
-    parser.add_argument('--sample', dest='compute_sample', type=str, default='False', choices=['True', 'False'], help='Flag to compute the sample rather than read it.')
     parser.add_argument('--sampling-method', dest='sampling_method', type=str, default='node', choices=['node', 'netdisc', 'randomwalk'], help='Flag to compute the sample rather than read it.')
     parser.add_argument('--processes', dest='processes', type=int, default=1, help='# of proceses to use (default 1, no multiproc)')
 

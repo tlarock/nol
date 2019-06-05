@@ -334,7 +334,7 @@ def RunEpisode(G, alpha, theta, epochs, Resultfile='output_file.txt', policy='lo
         elif jump is False:
             jval = 0
         else:
-            logging.info('SOMETHING IS WRONG WITH JUMP SWITCH!')
+            jval = -1
 
         if policy not in ['high', 'low', 'rand']:
             write_intermediate(epoch, reward, currentValue, delta, jump, p, theta, intermediate_name)

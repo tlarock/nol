@@ -42,10 +42,7 @@ def RunEpisode(G, alpha, theta, epochs, Resultfile='output_file.txt', policy='ra
                                      '_a' + str(alpha) + '_episode_' + str(episode) +
                                      '_intermediate.txt')
     intermediateFile = open(intermediate_name, 'w+')
-    if policy == 'globalmax_adaptive':
-        intermediateFile.write('Epoch left' + '\t' + 'G_t' + '\t'+ 'V_t'+ '\t'+ 'Error = Actual-prediction' + '\t' + 'RegressionError' + '\t' + 'Rewards in each step' + '\t' + 'jump' + '\t' + 'p' + '\t' + 'f' + '\t' + 'delta' + '\t' + 'value_MSE')
-    else:
-        intermediateFile.write('Epoch left' + '\t' + 'G_t' + '\t'+ 'V_t'+ '\t'+ 'Error = Actual-prediction' + '\t' + 'RegressionError' + '\t' + 'Rewards in each step' + '\t' + 'jump' + '\t' + 'value_MSE' + '\t' + 'theta_diff')
+    intermediateFile.write('Epoch left' + '\t' + 'G_t' + '\t'+ 'V_t'+ '\t'+ 'Error = Actual-prediction' + '\t' + 'RegressionError' + '\t' + 'Rewards in each step' + '\t' + 'jump' + '\t' + 'value_MSE' + '\t' + 'theta_diff')
     for i in range(theta.shape[0]):
         intermediateFile.write('\tTheta[' + str(i) + ']')
     intermediateFile.write('\n')
@@ -95,7 +92,7 @@ def RunEpisode(G, alpha, theta, epochs, Resultfile='output_file.txt', policy='ra
         adjacentNodes = G.get_adjlist(lastProbed)
 
         ## Choose a node to probe
-        nodeIndex, jump = action(G, adjacentNodes, policy, values, unprobedNodeIndices, p)
+        nodeIndex, jump = action(G, policy, values, unprobedNodeIndices, p)
 
 
         ## find the index node to probe according to policy
@@ -199,7 +196,7 @@ def RunEpisode(G, alpha, theta, epochs, Resultfile='output_file.txt', policy='ra
             break
 
         ## Update (q-learning)
-        next_node, _ = action(G, adjacentNodeIndex, policy, values, unprobedNodeIndices, p)
+        next_node, _ = action(G, policy, values, unprobedNodeIndices, p)
         nextValue = values[next_node]
 
         ## Calculate the estimated future reward
@@ -239,12 +236,8 @@ def RunEpisode(G, alpha, theta, epochs, Resultfile='output_file.txt', policy='ra
         values = features.dot(theta)
         ## Get MSE between old and new values
         MSE = sum([(old_values[i]-values[i])**2 for i in range(old_values.shape[0])])
-        if policy == 'globalmax_adaptive':
-            adaptive_delta = 1.0 / len(unprobedNodeIndices)
-            sigma = 0.1
-            p,f = update_p(G, adjacentNodeIndex, values, unprobedNodeIndices, p, delta, alpha, sigma, adaptive_delta)
 
-        if policy == 'globalmax_restart' or policy == 'globalmax_jump' or policy == 'globalmax_smartjump':
+        if policy == 'NOL' or policy == 'globalmax_jump' or policy == 'globalmax_smartjump':
             ## print a 1 if a random node was chosen, a 0 if the model was followed
             if jump is True:
                 jval = 1
@@ -256,12 +249,7 @@ def RunEpisode(G, alpha, theta, epochs, Resultfile='output_file.txt', policy='ra
         try:
             # write intermediate numbers
             regret = 0
-            if policy == 'globalmax_adaptive':
-                intermediateFile.write(str(epoch) + '\t' + str(estimatedReward) + '\t' +
-                    str(currentValue)  + '\t'+ str(regret) + '\t' +  str(delta) + '\t' + str(reward)
-                    + '\t' + str(jump) + '\t' + str(p) + '\t' + str(f) + '\t' + str(adaptive_delta) + '\t' + str(MSE))
-            else:
-                intermediateFile.write(str(epoch) + '\t' + str(estimatedReward) + '\t' + str(currentValue)  + '\t'+ str(regret) + '\t' +  str(delta) + '\t' + str(reward) + '\t' + str(jump) + '\t' + str(MSE) + '\t' + str(theta_diff))
+            intermediateFile.write(str(epoch) + '\t' + str(estimatedReward) + '\t' + str(currentValue)  + '\t'+ str(regret) + '\t' +  str(delta) + '\t' + str(reward) + '\t' + str(jump) + '\t' + str(MSE) + '\t' + str(theta_diff))
 
             for i in range(theta.shape[0]):
                 intermediateFile.write('\t' + str(theta[i]))
@@ -280,16 +268,7 @@ def RunEpisode(G, alpha, theta, epochs, Resultfile='output_file.txt', policy='ra
 
     return probedNodes, theta, rewards
 
-
-def update_p(G, adjnode, values, unprobedNodeIndices, p, td_error, alpha, sigma, delta):
-    idx = []
-    restart_probability = utility.getProbRestart()
-    unprobedNodeList = [row for row in G.row_to_node.keys() if row in unprobedNodeIndices]
-    f = (1 - np.exp( (-alpha*td_error) / sigma)) / (1 + np.exp( (-alpha*td_error) / sigma))
-    p = delta * f + (1-delta)*p
-    return p, f
-
-def action(G, adjnode, policy, values, unprobedNodeIndices, p = -1):
+def action(G, policy, values, unprobedNodeIndices, p = -1):
     """
     Accepts: Network object, list of locally adjacent nodes to the most
                 recently probed node (for local methods).
@@ -301,9 +280,7 @@ def action(G, adjnode, policy, values, unprobedNodeIndices, p = -1):
     idx = []
     restart_probability = utility.getProbRestart()
     unprobedNodeList = [row for row in G.row_to_node.keys() if row in unprobedNodeIndices]
-    if policy == 'globalmax':
-        return unprobedNodeList[np.argmax(values[unprobedNodeList])], False
-    elif policy == 'globalmax_jump':
+    if policy == 'globalmax_jump':
         prob = np.random.random()
         ## With probability p, follow global max
         if prob > p:
@@ -312,7 +289,7 @@ def action(G, adjnode, policy, values, unprobedNodeIndices, p = -1):
         else:
             ## with probability 1-p, pick a node at random
             return np.random.choice(unprobedNodeList, 1)[0], True
-    elif policy == 'globalmax_restart' or policy == 'globalmax_adaptive':
+    elif policy == 'NOL':
         prob = np.random.random()
         ## With probability p, follow global max
         if prob > p:
@@ -328,28 +305,12 @@ def action(G, adjnode, policy, values, unprobedNodeIndices, p = -1):
                 return G.node_to_row[node], True
             else:
                 return np.random.choice(unprobedNodeList, 1)[0], True
-    elif policy == 'globalmax_smartjump':
-        prob = np.random.random()
-        ## With probability p, follow global max
-        if prob > p:
-            idx = np.argmax(values[unprobedNodeList])
-            return unprobedNodeList[idx], False
-        else:
-            ## with probability 1-p, pick a node at random
-            ## proportional to the values
-            probabilities = values[unprobedNodeList] + abs(min(values[unprobedNodeList])) + 1e-100
-            probabilities /= sum(probabilities)
-            #probabilities = utility.softmax(values[unprobedNodeList])
-            return np.random.choice(unprobedNodeList, 1, p = probabilities)[0], True
-    elif policy == 'globalrandom':
-        idx = utility.random_pick(values[unprobedNodeList], 1)
-        return  unprobedNodeList[idx[0]]
     else:
         logging.warning("Unrecognized policy \"" + policy + "\". Exiting.")
         sys.exit(1)
 
 
-def RunIteration(G, alpha_input, episodes, epochs , initialNodes, Resultfile='output_file.txt', updateType = 'qlearning', policy ='random', regularization = 'nonnegative', order = 'linear', reward_function = 'new_nodes', saveGAP = 0, current_iteration=0, p = None, target_attribute = None):
+def RunIteration(G, alpha_input, episodes, epochs , initialNodes, Resultfile='output_file.txt', policy ='random', regularization = 'nonnegative', order = 'linear', reward_function = 'new_nodes', saveGAP = 0, current_iteration=0, p = None, target_attribute = None):
     theta_estimates = np.random.uniform(-0.2, 0.2,(G.get_numfeature(),))     # Initialize estimates at all 0.5
     initial_graph = G.copy()
 
@@ -359,5 +320,4 @@ def RunIteration(G, alpha_input, episodes, epochs , initialNodes, Resultfile='ou
 
         theta_estimates = theta # Update value estimates
         G = initial_graph.copy() # reset G to the original sample
-    # TODO this only returns the data for the final episode - is that what I want?
     return probed_nodes, theta, rewards
