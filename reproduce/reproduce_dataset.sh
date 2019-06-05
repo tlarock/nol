@@ -11,7 +11,7 @@ featuretype='default'
 rewardfunction='new_nodes'
 savegap=0
 epsilon=0.3
-decay=0
+decay=1
 burnin=0
 sampling_method=node
 processes=$2
@@ -74,7 +74,10 @@ output_folder=${base_output}${sample_para}/baseline-${rewardfunction}'-high-jump
 
 python3 ../nol/run_experiment.py -m high -p ${epsilon} -i $base_input -s $sample_dir -o $output_folder -n 1 -iter $iterations -b $budget --reward $rewardfunction --save_gap $savegap --processes $processes &
 
-wait
+if [ $3 == 'wait' ]
+then
+	wait
+fi
 ## KNN
 #knn=${NOL}/baseline/net_complete/mab_explorer/
 #cd ${knn}/mab_explorer/
