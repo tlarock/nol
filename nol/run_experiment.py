@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-import Network, NOL, NOL_SK
+#import Network, NOL, NOL_SK
+import Network, NOL
 
 from sampling import generate_sample
 import numpy as np
@@ -40,13 +41,14 @@ def runOneTrial(model, sample_dir, realAdjList, sampleType, samplePortion, alpha
         g = Network.Network(realAdjList, sampleAdjList, calculate_features=False, attribute_dict=attribute_dict)
 
 
-    if model in ['NOL', 'NOL-HTR']:
-        probednode, _, rewards = NOL.RunIteration(g, alpha, episodes, epochs, list(nodes), outfile,  model, 'no', reward_function = reward_function, saveGAP = saveGAP, current_iteration=ite, p=p, k=k, decay=decay, target_attribute=target_attribute)
+    #if model in ['NOL', 'NOL-HTR']:
+    probednode, _, rewards = NOL.RunIteration(g, alpha, episodes, epochs, list(nodes), outfile,  model, 'no', reward_function = reward_function,
+                                              saveGAP = saveGAP, current_iteration=ite, p=p, k=k, decay=decay, target_attribute=target_attribute, burn_in=burn_in)
 
-    elif model == 'svm' or model == 'knn' or model == 'linreg' or model == 'logit' or model == 'high' or model == 'low' or model == 'rand':
-        probednode, _, rewards = NOL_SK.RunIteration(g, alpha, episodes, epochs, list(nodes), outfile, model, 'no', reward_function = reward_function, saveGAP = saveGAP, current_iteration=ite, p=p, decay=decay, target_attribute=target_attribute, burn_in=burn_in)
-    else:
-        probednode, _, rewards = NOL.RunIteration(g, alpha, episodes, epochs, list(nodes), outfile, model, 'no', reward_function = reward_function, saveGAP = saveGAP, current_iteration=ite, p=p, target_attribute=target_attribute)
+    #elif model == 'svm' or model == 'knn' or model == 'linreg' or model == 'logit' or model == 'high' or model == 'low' or model == 'rand':
+        #probednode, _, rewards = NOL_SK.RunIteration(g, alpha, episodes, epochs, list(nodes), outfile, model, 'no', reward_function = reward_function, saveGAP = saveGAP, current_iteration=ite, p=p, decay=decay, target_attribute=target_attribute, burn_in=burn_in)
+    #else:
+        #probednode, _, rewards = NOL.RunIteration(g, alpha, episodes, epochs, list(nodes), outfile, model, 'no', reward_function = reward_function, saveGAP = saveGAP, current_iteration=ite, p=p, target_attribute=target_attribute)
 
 
     reward_cumulative = np.cumsum(rewards)

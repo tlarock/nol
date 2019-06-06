@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 import numpy as np
 np.set_printoptions(precision=3, suppress=True)
-from sklearn import linear_model
 import Network
 import sys
 import os
@@ -10,8 +9,7 @@ import logging
 from scipy import stats
 from sklearn.svm import SVC
 from sklearn.neighbors import KNeighborsClassifier
-from sklearn.linear_model import LogisticRegression
-from sklearn.linear_model import LinearRegression
+from sklearn.linear_model import LogisticRegression, LinearRegression
 from puAdapter import *
 
 
@@ -19,9 +17,7 @@ def RunEpisode(G, alpha, theta, epochs, Resultfile='output_file.txt', policy='lo
              reward_function='new_nodes', saveGap=0, episode=0, iteration=0, p = None, decay=0, target_attribute = None, burn_in=0):
     if policy not in ['high', 'low', 'rand']:
         features = G.calculate_features(G, featureOrder)
-    ## TODO Adhoc
-    values_list = []
-    rewards_list = []
+
     probedNodes = []
     unprobedNodeSet = G.sample_node_set.copy()
     unprobedNodeIndices = {G.node_to_row[i] for i in unprobedNodeSet}

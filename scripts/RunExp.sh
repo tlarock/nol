@@ -14,9 +14,9 @@ do
 	sample_dir=${base_sample}${sample_para}
 			echo "START: " $output_folder
 			output_folder=${base_output}${sample_para}/${featuretype}-${rewardfunction}'-'${model}'-p-'${p}-decay-$decay/
-			python3 $program -m $model -i $base_input -s $sample_dir -o $output_folder -n $networks -iter $iterations -e $episodes -b $budget --alpha $a --feats $featuretype --reward $rewardfunction --save_gap $savegap -p $p --decay $decay --ktype $ktype -k $k --burn $burnin --sampling-method $sampling_method &
+			#python3 $program -m $model -i $base_input -s $sample_dir -o $output_folder -n $networks -iter $iterations -e $episodes -b $budget --alpha $a --feats $featuretype --reward $rewardfunction --save_gap $savegap -p $p --decay $decay --ktype $ktype -k $k --burn $burnin --sampling-method $sampling_method &
 
-			#python3 $program -m $model --attr $attribute_file --target $target_attribute --seeds $seeds -i $base_input -s $sample_dir -o $output_folder -n $networks -iter $iterations -e $episodes -b $budget --alpha $a  --feats $featuretype --reward $rewardfunction --save_gap $savegap -p $p --decay $decay --burn $burnin --sampling-method $sampling_method &
+			python3 $program -m $model --attr $attribute_file --target $target_attribute --seeds $seeds -i $base_input -s $sample_dir -o $output_folder -n $networks -iter $iterations -e $episodes -b $budget --alpha $a  --feats $featuretype --reward $rewardfunction --save_gap $savegap -p $p --decay $decay --burn $burnin --sampling-method $sampling_method &
 			echo "END: " $output_folder
 		    done
 		done
