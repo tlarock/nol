@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-import Network, NOL, NOL_HTR, NOL_SK
+#import Network, NOL, NOL_HTR, NOL_SK
+import Network, NOL, NOL_SK
+
 from sampling import generate_sample
 import numpy as np
 import os
@@ -40,7 +42,9 @@ def runOneTrial(model, sample_dir, realAdjList, sampleType, samplePortion, alpha
 
 
     if model == 'NOL-HTR':
-        probednode, _, rewards = NOL_HTR.RunIteration(g, alpha, episodes, epochs, list(nodes), outfile,  model, 'no', reward_function = reward_function, saveGAP = saveGAP, current_iteration=ite, p=p, k=k, decay=decay, target_attribute=target_attribute)
+        #probednode, _, rewards = NOL_HTR.RunIteration(g, alpha, episodes, epochs, list(nodes), outfile,  model, 'no', reward_function = reward_function, saveGAP = saveGAP, current_iteration=ite, p=p, k=k, decay=decay, target_attribute=target_attribute)
+        probednode, _, rewards = NOL.RunIteration(g, alpha, episodes, epochs, list(nodes), outfile,  model, 'no', reward_function = reward_function, saveGAP = saveGAP, current_iteration=ite, p=p, k=k, decay=decay, target_attribute=target_attribute)
+
     elif model == 'svm' or model == 'knn' or model == 'linreg' or model == 'logit' or model == 'high' or model == 'low' or model == 'rand':
         probednode, _, rewards = NOL_SK.RunIteration(g, alpha, episodes, epochs, list(nodes), outfile, model, 'no', reward_function = reward_function, saveGAP = saveGAP, current_iteration=ite, p=p, decay=decay, target_attribute=target_attribute, burn_in=burn_in)
     else:

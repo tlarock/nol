@@ -60,11 +60,10 @@ def RunEpisode(G, alpha, theta, epochs, Resultfile='output_file.txt',
     if reward_function == 'attribute':
         rewards = [1]*initialTargetNodes
 
+
     count = 0
     interval = 500
-    epoch = 0
-    while epoch < epochs:
-        # print for logging purposes...
+    for epoch in range(epochs):
         if count == interval:
             count = 0
             logging.info("Iteration: " + str(iteration) + " Epoch: " + str(epoch))
@@ -120,18 +119,13 @@ def RunEpisode(G, alpha, theta, epochs, Resultfile='output_file.txt',
         new_unprobed_indices = {G.node_to_row[node] for node in new_unprobed}
         unprobedNodeIndices.update(new_unprobed_indices)
         unprobedNodeIndices.remove(nodeIndex)
+
         assert unprobedNodeSet.isdisjoint(G.probedNodeSet)
 
 
         ## Calculate absolute reward
         if reward_function == 'new_nodes':
             reward = len(G.node_to_row) - numberOfNodes
-        elif reward_function == 'new_nodes_local':
-            reward = len(G.node_to_row) - numberOfNodes
-            #if G.rewardCounts[probedNode] > 0:
-            #    reward += np.log2(G.rewardCounts[probedNode])
-            reward += G.rewardCounts[probedNode]
-
         elif reward_function == 'new_edges':
             reward = num_new_edges
         elif reward_function == 'nodes_and_triangles':
@@ -166,9 +160,6 @@ def RunEpisode(G, alpha, theta, epochs, Resultfile='output_file.txt',
 
         ## compute value per node
         values = features.dot(theta)
-
-        ## Update (q-learning)
-        next_node, _ = action(G, policy, values, unprobedNodeIndices, p)
 
         ## Calculate the estimated future reward
         delta = reward - currentValue
