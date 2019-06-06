@@ -70,29 +70,12 @@ def RunEpisode(G, alpha, theta, epochs, Resultfile='output_file.txt', policy='lo
             for node in targetNodeSet:
                 if i == 0:
                     samples_mat = np.append(features[G.node_to_row[node]], np.array([1]))
+                    if len(samples_mat.shape) == 1:
+                        ## If we use 1 seed, reshape the array to work with classifiers
+                        samples_mat = samples_mat.reshape(1, samples_mat.shape[0])
                 else:
                     samples_mat = np.vstack( (samples_mat, np.append(features[G.node_to_row[node]], np.array([1])) ) )
                 i+=1
-
-        if policy == 'svm':
-            values = compute_svm_values(samples_mat, features, unprobedNodeIndices)
-        elif policy == 'knn':
-            values = compute_knn_values(samples_mat, features, unprobedNodeIndices)
-        elif policy == 'logit':
-            y = samples_mat[:,samples_mat.shape[1]-1]
-            ## if there is only 1 class, use the 1 class prediction
-            if np.unique(y).shape[0] == 1:
-                for node in unprobedNodeSet:
-                    all_unprobed_mat = np.array(samples_mat)
-                    all_unprobed_mat = np.vstack( (all_unprobed_mat, np.append(features[G.node_to_row[node]], np.array([-1]))))
-                values, theta = compute_logit_values(all_unprobed_mat, features, unprobedNodeIndices, one_class=True)
-            else:
-                values, theta = compute_logit_values(samples_mat, features, unprobedNodeIndices)
-        elif policy == 'linreg':
-            values, theta = compute_linreg_values(samples_mat, features, unprobedNodeIndices)
-        elif policy in ['high', 'low', 'rand']:
-            values = compute_deg_values(G, unprobedNodeIndices)
-
 
         initialTargetNodes = len(targetNodeSet)
         logging.info('# initial target nodes: ' + str(initialTargetNodes))
@@ -157,7 +140,7 @@ def RunEpisode(G, alpha, theta, epochs, Resultfile='output_file.txt', policy='lo
             ## Update reward
             rewards.append(absoluteReward)
 
-            ## TODO Update sampled matrix
+            ## update sampled matrix
             if policy not in ['high', 'low', 'rand']:
                 samples_mat = np.vstack( (samples_mat, np.append(features[nodeIndex], np.array([absoluteReward])) ) )
                 features = G.update_features(G, probedNode, order=featureOrder)
