@@ -4,7 +4,7 @@ set -ex
 
 dataset=$1
 sample_para=0.01
-iterations='2'
+iterations='30'
 budget='5000'
 alpha=0.01
 featuretype='default'

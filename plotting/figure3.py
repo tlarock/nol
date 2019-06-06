@@ -28,12 +28,16 @@ name = 'ba-graph_N-10000_m-5_m0-5/'
 name = 'N-10000_maxcc-0.95_maxgcc-0.15_avgDeg-10/'
 
 names = {
-    'synthetic/ba-graph_N-10000_m-5_m0-5/':'BA',
-    'synthetic/N-10000_maxcc-0.95_maxgcc-0.15_avgDeg-10/':'BTER',
-    'dblp/':'DBLP'
+    'synthetic/ba-graph_N-10000_m-5_m0-5/':('BA',10000),
+    'synthetic/N-10000_maxcc-0.95_maxgcc-0.15_avgDeg-10/': ('BTER', 10000),
+    'cora/': ('Cora', 23000),
+    'dblp/': ('DBLP', 6700),
+    'enron/':('Enron', 36700),
+    'caida/':('Caida', 26500)
 }
 
 for name in names:
+    N = names[name][1]
     input_dir = results_base + name + sample_dir
 
     nonpara_results = '/Users/larock/git/nol/baseline/net_complete/mab_explorer/results/ba_rn_results'
@@ -89,5 +93,5 @@ for name in names:
                 legobj.set_linewidth(3.0)
 
         plt.tight_layout()
-        out_name = names[name]
-        plt.savefig(plots_base + '/' + str(out_name) + '-' + out_reward_name + '-HTR-inset.pdf', dpi = 300)
+        out_name = names[name][0]
+        plt.savefig(plots_base + '/' + str(out_name) + '-' + out_reward_name + '.pdf', dpi = 300)

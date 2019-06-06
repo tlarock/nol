@@ -14,8 +14,6 @@ def RunEpisode(G, alpha, theta, epochs, Resultfile='output_file.txt',
     features = G.calculate_features(G, featureOrder)
     values = features.dot(theta)
     ## TODO Adhoc
-    values_list = []
-    rewards_list = []
     probedNodes = []
     unprobedNodeSet = G.sample_node_set.copy()
     unprobedNodeIndices = {G.node_to_row[i] for i in unprobedNodeSet}
@@ -66,10 +64,6 @@ def RunEpisode(G, alpha, theta, epochs, Resultfile='output_file.txt',
     interval = 500
     epoch = 0
     while epoch < epochs:
-        values_list.append(values[list(unprobedNodeIndices)])
-        rewards_list.append([(len(G.complete_graph_adjlist[node]) - len(G.sample_adjlist_sets[node])) for node in unprobedNodeSet])
-
-
         # print for logging purposes...
         if count == interval:
             count = 0
@@ -82,20 +76,10 @@ def RunEpisode(G, alpha, theta, epochs, Resultfile='output_file.txt',
         if reward_function == 'attribute':
             numberOfTargetNodes = len(targetNodeSet) - initialTargetNodes
 
-        ## need the last probed node
-        lastProbed = None
-        if len(probedNodes) > 0:
-            lastProbed = probedNodes[-1]
-        else:
-            lastProbed = np.random.choice(list(G.node_to_row.keys()), 1)[0]
+        ## Choose a node (index) to probe
+        nodeIndex, jump = action(G, policy, values, unprobedNodeIndices, p)
 
-        ## Always pass the neighbors of the previously probed node
-        adjacentNodes = G.get_adjlist(lastProbed)
-
-        ## Choose a node to probe
-        nodeIndex, jump = action(G, adjacentNodes, policy, values, unprobedNodeIndices, p)
-
-        ## find the index node to probe according to policy
+        ## Get the node id
         probedNode = G.row_to_node[nodeIndex]
 
         ## add to the probed nodes
@@ -141,34 +125,32 @@ def RunEpisode(G, alpha, theta, epochs, Resultfile='output_file.txt',
 
         ## Calculate absolute reward
         if reward_function == 'new_nodes':
-            absoluteReward = len(G.node_to_row) - numberOfNodes
+            reward = len(G.node_to_row) - numberOfNodes
         elif reward_function == 'new_nodes_local':
-            absoluteReward = len(G.node_to_row) - numberOfNodes
+            reward = len(G.node_to_row) - numberOfNodes
             #if G.rewardCounts[probedNode] > 0:
-            #    absoluteReward += np.log2(G.rewardCounts[probedNode])
-            absoluteReward += G.rewardCounts[probedNode]
+            #    reward += np.log2(G.rewardCounts[probedNode])
+            reward += G.rewardCounts[probedNode]
 
         elif reward_function == 'new_edges':
-            absoluteReward = num_new_edges
+            reward = num_new_edges
         elif reward_function == 'nodes_and_triangles':
-            absoluteReward = (len(G.node_to_row) - numberOfNodes) + num_new_triangles
+            reward = (len(G.node_to_row) - numberOfNodes) + num_new_triangles
         elif reward_function == 'attribute':
-            absoluteReward = len(targetNodeSet) - initialTargetNodes - numberOfTargetNodes
-
-        reward = absoluteReward
+            reward = len(targetNodeSet) - initialTargetNodes - numberOfTargetNodes
 
         ## Update reward
-        rewards.append(absoluteReward)
+        rewards.append(reward)
 
         ## TODO Update sampled matrix
         if epoch == 0:
-            samples_mat = np.append(features[nodeIndex], np.array([absoluteReward]) )
+            samples_mat = np.append(features[nodeIndex], np.array([reward]))
             samples_mat = np.reshape(samples_mat, (1, samples_mat.shape[0]))
             if reward_function == 'attribute':
                 for node in targetNodeSet:
                     samples_mat = np.vstack( (samples_mat, np.append(features[G.node_to_row[node]], np.array([1])) ) )
         else:
-            samples_mat = np.vstack( (samples_mat, np.append(features[nodeIndex], np.array([absoluteReward])) ) )
+            samples_mat = np.vstack( (samples_mat, np.append(features[nodeIndex], np.array([reward])) ) )
 
         ## Need the features of the current sample
         features = G.F
@@ -179,25 +161,17 @@ def RunEpisode(G, alpha, theta, epochs, Resultfile='output_file.txt',
         ## get the current gradient
         currentGradient = features[nodeIndex, :].copy()
 
-        ## update the features    
+        ## update the features
         features = G.update_features(G, probedNode, order=featureOrder)
 
         ## compute value per node
         values = features.dot(theta)
 
-        ## get value estimate on the next step given current theta
-        adjacentNodeIndex = G.get_adjlist(probedNode)
-
         ## Update (q-learning)
-        next_node, _ = action(G, adjacentNodeIndex, policy, values, unprobedNodeIndices, p)
-        nextValue = values[next_node]
+        next_node, _ = action(G, policy, values, unprobedNodeIndices, p)
 
         ## Calculate the estimated future reward
-        estimatedReward = reward
-        delta = estimatedReward - currentValue
-
-        ## Update the eligibility trace
-
+        delta = reward - currentValue
 
         ## update theta
         old_theta = theta
@@ -210,7 +184,7 @@ def RunEpisode(G, alpha, theta, epochs, Resultfile='output_file.txt',
         ## Get MSE between old and new values
         MSE = sum([(old_values[i]-values[i])**2 for i in range(old_values.shape[0])])
 
-        ## TODO ad-hoc p decay
+        ## exponential decay on jump probability
         if decay == 1:
             if epoch == 0:
                 original_p = p
@@ -227,7 +201,7 @@ def RunEpisode(G, alpha, theta, epochs, Resultfile='output_file.txt',
                 jval = -1
         try:
             # write intermediate numbers
-            intermediateFile.write(str(epoch) + '\t' + str(estimatedReward) + '\t' + str(currentValue)  + '\t'+ str(delta) + '\t' +  str(delta) +
+            intermediateFile.write(str(epoch) + '\t' + str(reward) + '\t' + str(currentValue)  + '\t'+ str(delta) + '\t' +  str(delta) +
                                        '\t' + str(reward) + '\t' + str(jump) + '\t' + str(MSE) + '\t' + str(theta_diff))
 
             for i in range(theta.shape[0]):
@@ -261,10 +235,6 @@ def RunEpisode(G, alpha, theta, epochs, Resultfile='output_file.txt',
 def median_of_means(samples_mat, theta, alpha, delta, regularization, k_input, confidence=0.05, lambda_regres=0.0, number_unprobed=0):
 
     n = samples_mat.shape[0]
-
-    ## TODO Set k rather than choosing it (currenlty not using confidence param)
-    #k = int(np.ceil(np.log2(number_unprobed)))
-    #k = int(np.ceil(np.log2(1./confidence)))
     if isinstance(k_input, int):
         k = k_input
     elif isinstance(k_input, type(np.log2)):
@@ -280,8 +250,8 @@ def median_of_means(samples_mat, theta, alpha, delta, regularization, k_input, c
         k = n
 
     features = samples_mat[:,0:samples_mat.shape[1]-1]
-    ## TODO If the reward function is binary, should add some small response value for 0, otherewise the best parameters will be 0...
-    y = samples_mat[:,samples_mat.shape[1]-1] + 0.001
+    ## TODO If the reward function is binary, should add some small response value for 0, otherewise the best parameters will be 0.
+    y = samples_mat[:,samples_mat.shape[1]-1]
     ## Implement median of means
     if n/k > 2000:
         num_samples = 2000
@@ -319,10 +289,9 @@ def median_of_means(samples_mat, theta, alpha, delta, regularization, k_input, c
 
     return new_theta
 
-def action(G, adjnode, policy, values, unprobedNodeIndices, p = -1):
+def action(G, policy, values, unprobedNodeIndices, p = -1):
     """
-    Accepts: Network object, list of locally adjacent nodes to the most
-                recently probed node (for local methods).
+    Accepts: Network object,
                 The policy to probe with.
                 Current value function.
                 Set of unprobed indices.

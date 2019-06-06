@@ -173,32 +173,24 @@ def RunEpisode(G, alpha, theta, epochs, Resultfile='output_file.txt', policy='NO
         ## compute value per node
         values = features.dot(theta)
 
-        ## get value estimate on the next step given current theta
-        adjacentNodeIndex = G.get_adjlist(probedNode)
         if len(unprobedNodeIndices) == 0:
             break
 
+        ## get value estimate on the next step given current theta
         ## Update (q-learning)
-        next_node, _ = action(G, policy, values, unprobedNodeIndices, p)
-        nextValue = values[next_node]
+        #next_node, _ = action(G, policy, values, unprobedNodeIndices, p)
+        #nextValue = values[next_node]
 
         ## Calculate the estimated future reward
-        #estimatedReward = reward + gamma * nextValue
-        estimatedReward = reward + nextValue
-        delta = estimatedReward - currentValue
+        #estimatedReward = reward + nextValue
+        #delta = estimatedReward - currentValue
 
-        ## Update the eligibility trace
-        #eligibilityTraces = lambda_ * gamma * eligibilityTraces + currentGradient.T
-
-        ## Do learning
         old_theta = theta
-        if alpha > 0:
-            ## regular learning with positive learning rate
-            #theta = theta + (alpha * delta * eligibilityTraces)
-            theta = theta + alpha*delta*currentGradient.T
-        else:
-            logging.warning("Learning rate Alpha can not be 0")
-            sys.exit(1)
+
+        if policy == 'NOL':
+            theta = online_regression_update(theta, alpha, reward, currentValue, currentGradient)
+        #elif policy == 'NOL-HTR':
+        #    theta = median_of_means(samples_mat, theta, alpha, delta, regularization, k, number_unprobed=len(unprobedNodeIndices))
 
 
         if regularization == 'nonnegative':
@@ -232,7 +224,9 @@ def RunEpisode(G, alpha, theta, epochs, Resultfile='output_file.txt', policy='NO
         try:
             # write intermediate numbers
             regret = 0
-            intermediateFile.write(str(epoch) + '\t' + str(estimatedReward) + '\t' + str(currentValue)  + '\t'+ str(regret) + '\t' +  str(delta) + '\t' + str(reward) + '\t' + str(jump) + '\t' + str(MSE) + '\t' + str(theta_diff))
+            #intermediateFile.write(str(epoch) + '\t' + str(estimatedReward) + '\t' + str(currentValue)  + '\t'+ str(regret) + '\t' +  str(delta) + '\t' + str(reward) + '\t' + str(jump) + '\t' + str(MSE) + '\t' + str(theta_diff))
+            intermediateFile.write(str(epoch) + '\t' + str(0) + '\t' + str(currentValue)  + '\t'+ str(regret) + '\t' +  str(0) + '\t' + str(reward) + '\t' + str(jump) + '\t' + str(MSE) + '\t' + str(theta_diff))
+
 
             for i in range(theta.shape[0]):
                 intermediateFile.write('\t' + str(theta[i]))
@@ -250,6 +244,18 @@ def RunEpisode(G, alpha, theta, epochs, Resultfile='output_file.txt', policy='NO
     intermediateFile.close()
 
     return probedNodes, theta, rewards
+
+
+def online_regression_update(theta, alpha, reward, value, node_features):
+    loss = (reward - value)**2
+
+    gradient = -2*(reward - value) * node_features
+
+    ## update theta
+    theta = theta + alpha*gradient.T
+
+    return theta
+
 
 def action(G, policy, values, unprobedNodeIndices, p = -1):
     """

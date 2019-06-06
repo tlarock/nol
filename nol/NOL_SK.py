@@ -202,6 +202,7 @@ def RunEpisode(G, alpha, theta, epochs, Resultfile='output_file.txt', policy='lo
 
         ## Choose a node to probe
         nodeIndex, jump = action(G, policy, values, unprobedNodeIndices, p)
+
         ## find the index node to probe according to policy
         probedNode = G.row_to_node[nodeIndex]
 
