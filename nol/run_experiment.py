@@ -1,17 +1,13 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-
-#import Network, NOL, NOL_SK
-import Network, NOL
-
-from sampling import generate_sample
 import numpy as np
 import os
-import re
 import glob
 import argparse
 import logging
+import Network, NOL
 from multiprocessing import Pool
+from sampling import generate_sample
 from utility import read_network
 from utility import read_attributes
 
@@ -20,10 +16,10 @@ FEATURES=['netdisc', 'default', 'refex', 'node2vec', 'n2v-refex', 'knn']
 
 
 
-def runOneTrial(model, sample_dir, realAdjList, sampleType, samplePortion, alpha,
+def runOneTrial(model, sample_dir, realAdjList, samplePortion, alpha,
                 episodes, epochs, outfile, ite, saveGAP, feature_type, reward_function, p, decay, k, attribute_dict,
                 target_attribute, num_seeds, burn_in, sampling_method):
-    np.random.seed()
+    np.random.seed() ## Set a new random seed every experiment - necessary for multiprocessing to work properly
     logger = logging.getLogger(__name__)
     logger.info(str(ite))
     if sampling_method == 'netdisc':
@@ -41,15 +37,8 @@ def runOneTrial(model, sample_dir, realAdjList, sampleType, samplePortion, alpha
         g = Network.Network(realAdjList, sampleAdjList, calculate_features=False, attribute_dict=attribute_dict)
 
 
-    #if model in ['NOL', 'NOL-HTR']:
     probednode, _, rewards = NOL.RunIteration(g, alpha, episodes, epochs, list(nodes), outfile,  model, 'no', reward_function = reward_function,
                                               saveGAP = saveGAP, current_iteration=ite, p=p, k=k, decay=decay, target_attribute=target_attribute, burn_in=burn_in)
-
-    #elif model == 'svm' or model == 'knn' or model == 'linreg' or model == 'logit' or model == 'high' or model == 'low' or model == 'rand':
-        #probednode, _, rewards = NOL_SK.RunIteration(g, alpha, episodes, epochs, list(nodes), outfile, model, 'no', reward_function = reward_function, saveGAP = saveGAP, current_iteration=ite, p=p, decay=decay, target_attribute=target_attribute, burn_in=burn_in)
-    #else:
-        #probednode, _, rewards = NOL.RunIteration(g, alpha, episodes, epochs, list(nodes), outfile, model, 'no', reward_function = reward_function, saveGAP = saveGAP, current_iteration=ite, p=p, target_attribute=target_attribute)
-
 
     reward_cumulative = np.cumsum(rewards)
     reward_sd = []
@@ -59,7 +48,7 @@ def runOneTrial(model, sample_dir, realAdjList, sampleType, samplePortion, alpha
     return reward_cumulative
 
 
-def runManyTrials(model, input_file, sample_type, sample_size, sample_dir, output_dir, budget, episodes, iterations, save_gap, alpha,
+def runManyTrials(model, input_file, sample_fraction, sample_dir, output_dir, budget, episodes, iterations, save_gap, alpha,
                   feature_type, reward_function, p, decay, k, attribute_file, target_attribute, num_seeds, burn_in, sampling_method, processes):
 
     logger = logging.getLogger(__name__)
@@ -83,12 +72,6 @@ def runManyTrials(model, input_file, sample_type, sample_size, sample_dir, outpu
     ## matrix of results per iteration
     results_matrix = []
 
-    if sample_type != 'compute':
-        sample_dir_files = [f for f in os.listdir(sample_dir) if str('_' + str(sample_type) + '-sample_' + str(sample_size)) in f]
-    else:
-        ## TODO adhoc way to choose to compute samples
-        sample_dir_files = ['compute']*iterations
-
     ## filename for averaged output for this realization
     final_table = os.path.join(output_dir, model + '_a' + str(alpha) + '.csv')
 
@@ -99,7 +82,7 @@ def runManyTrials(model, input_file, sample_type, sample_size, sample_dir, outpu
     if processes == 1:
         for i in range(iterations):
             logger.info("Iteration: " + str(i))
-            result = runOneTrial(model,sample_dir,realAdjList,sample_type,sample_size, alpha,episodes,budget, output_dir,i,save_gap,\
+            result = runOneTrial(model,sample_dir,realAdjList, sample_fraction, alpha,episodes,budget, output_dir,i,save_gap,\
                                  feature_type, reward_function, p, decay, k, attribute_dict, target_attribute, num_seeds, burn_in, sampling_method)
 
             results_matrix.append(np.array(result))
@@ -118,11 +101,10 @@ def runManyTrials(model, input_file, sample_type, sample_size, sample_dir, outpu
                 for b in range(budget):
                     final_result.write(str(b) + '\t' + str(results_avg[b]) + '\t' + str(results_sd[b]) + '\t' + str((b+1) / N) + '\n')
 
-
             row += 1
     else:
         pool = Pool(processes)
-        arguments = [(model, sample_dir, realAdjList, sample_type, sample_size, alpha, episodes, budget, output_dir, i, save_gap,\
+        arguments = [(model, sample_dir, realAdjList, sample_fraction, alpha, episodes, budget, output_dir, i, save_gap,\
                                  feature_type, reward_function, p, decay, k, attribute_dict, target_attribute, num_seeds, burn_in, sampling_method) \
                      for i in range(iterations)]
         results_matrix = pool.starmap(runOneTrial, arguments)
@@ -134,18 +116,11 @@ def runManyTrials(model, input_file, sample_type, sample_size, sample_dir, outpu
             for b in range(budget):
                 final_result.write(str(b) + '\t' + str(results_avg[b]) + '\t' + str(results_sd[b]) + '\t' + str((b+1) / N) + '\n')
 
-
     return results_matrix
 
-def experiment(model, input_directory, sample_folder, output_folder, \
+def experiment(model, input_directory, sample_fraction, output_folder, \
                budget, episodes, iterations, networks, save_gap, \
                alpha, feature_type, reward_function, p, decay, k, attribute_file, target_attribute, num_seeds, burn_in, sampling_method, processes):
-    ## Get sample information
-    type_regex = re.compile(r'[a-z]*-')
-    size_regex = re.compile(r'[0-9][.][0-9]+')
-
-    sample_type = re.findall(type_regex, sample_folder)[0].split('-')[0]
-    sample_size = re.findall(size_regex, sample_folder)[0]
 
     ## For every network
     for i in range(1, networks+1):
@@ -156,7 +131,7 @@ def experiment(model, input_directory, sample_folder, output_folder, \
         output_dir = output_folder + 'network' + str(i)
 
         ## Run 'iterations' iterations on this network
-        results_matrix = runManyTrials(model, input_file, sample_type, sample_size, sample_dir, output_dir, \
+        results_matrix = runManyTrials(model, input_file, sample_fraction, sample_dir, output_dir, \
                budget, episodes, iterations, save_gap, \
                alpha, feature_type, reward_function, p, decay, k, attribute_file, target_attribute, num_seeds, burn_in, sampling_method, processes)
 
@@ -172,7 +147,7 @@ def main(args):
         k = int(args.k)
     elif args.ktype == 'funct':
         k = eval(args.k)
-    experiment(args.model, args.input_directory, args.sample_folder, args.output_folder,
+    experiment(args.model, args.input_directory, args.sample_fraction, args.output_folder,
                   args.budget, args.episodes, args.iterations, args.networks, args.save_gap,
                   args.alpha, args.feature_type, args.reward_function, args.p, args.decay, k, args.attribute_file,
                args.target_attribute, args.num_seeds, args.burn_in, args.sampling_method, args.processes)
@@ -186,7 +161,7 @@ if __name__ == '__main__':
     parser.add_argument('--target', dest='target_attribute', default = None, type=int, help='Target attribute (row in attribute file')
     parser.add_argument('--seeds', dest='num_seeds', default=5, type=int, help='Number of seed nodes for active search.')
     parser.add_argument('-i', dest='input_directory', help='directory containing complete graph\'s adjacency list. Graphs should have name \'networkA\', where A indicates the realization #')
-    parser.add_argument('-s', dest='sample_folder', help='name of directory that holds the sample files')
+    parser.add_argument('-s', dest='sample_fraction', default=0.01, type=float, help='Fraction of edges/nodes to sample.')
     parser.add_argument('-o', dest='output_folder', help='name of the desired output directory')
     parser.add_argument('-n', dest='networks', type = int, help = 'number of networks to run experiments on')
     parser.add_argument('-iter', dest='iterations', type = int, help='number of iterations')

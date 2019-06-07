@@ -15,6 +15,9 @@ def RunEpisode(G, alpha, theta, epochs, Resultfile='output_file.txt', policy='NO
              reward_function='new_nodes', saveGap=0, episode=0, iteration=0, p = None, decay=0, k=4, target_attribute = None, burn_in=0):
     if policy not in ['high', 'low', 'rand']:
         features = G.calculate_features(G, featureOrder)
+    else:
+        features = None
+        samples_mat = None
 
     probedNodes = []
     unprobedNodeSet = G.sample_node_set.copy()
@@ -73,7 +76,7 @@ def RunEpisode(G, alpha, theta, epochs, Resultfile='output_file.txt', policy='NO
     interval = 500
     epoch = 0
     if burn_in <= 0:
-        if reward_function == 'attribute':
+        if reward_function == 'attribute' or policy in ['high', 'low', 'rand']:
             values = get_values(G, policy, samples_mat, features, unprobedNodeIndices, unprobedNodeSet)
         else:
             values = features.dot(theta)
@@ -211,20 +214,22 @@ def RunEpisode(G, alpha, theta, epochs, Resultfile='output_file.txt', policy='NO
             else:
                 samples_mat = update_samples_matrix(samples_mat, features, nodeIndex, reward, reward_function, targetNodeSet)
 
-        ## Need the features of the current sample
-        features = G.F
+        if policy not in ['high', 'low', 'rand']:
+            ## Need the features of the current sample
+            features = G.F
 
-        ## what is the value function of current state with current theta
-        currentValue = values[nodeIndex]
+            ## what is the value function of current state with current theta
+            currentValue = values[nodeIndex]
 
-        ## get the current gradient
-        currentGradient = features[nodeIndex, :].copy()
+            ## get the current gradient
+            currentGradient = features[nodeIndex, :].copy()
 
-        ## update the features    
-        features = G.update_features(G, probedNode, order=featureOrder)
+            ## update the features    
+            features = G.update_features(G, probedNode, order=featureOrder)
 
-        ## Delta is the difference from between expecation and reward
-        delta = reward - currentValue
+            ## Delta is the difference from between expecation and reward
+            delta = reward - currentValue
+
 
         ## compute value per node
         if policy in ['NOL', 'NOL-HTR']:
@@ -264,7 +269,6 @@ def RunEpisode(G, alpha, theta, epochs, Resultfile='output_file.txt', policy='NO
             values = get_values(G, policy, samples_mat, features, unprobedNodeIndices, unprobedNodeSet)
 
         if policy == 'NOL' or policy == 'globalmax_jump':
-            ## print a 1 if a random node was chosen, a 0 if the model was followed
             if jump is True:
                 jval = 1
             elif jump is False:
@@ -278,7 +282,7 @@ def RunEpisode(G, alpha, theta, epochs, Resultfile='output_file.txt', policy='NO
         if policy not in ['high', 'low', 'rand']:
             write_intermediate(epoch, reward, currentValue, delta, jump, p, theta, intermediate_name)
         else:
-            write_intermediate(epoch, reward, currentValue, delta, jump, p, None, intermediate_name)
+            write_intermediate(epoch, reward, 0, 0, jump, p, None, intermediate_name)
         write_query(G, probedNode, targetNodeSet, intermediateGraphFile)
         if (saveGap != 0 and graphSaveInterval == (saveGap)) or epoch == (epochs-1):
             graphSaveInterval = 0
@@ -293,7 +297,6 @@ def RunEpisode(G, alpha, theta, epochs, Resultfile='output_file.txt', policy='NO
         epoch += 1
 
     logging.info('Total reward: ' + str(sum(rewards)))
-    print(str(sum(rewards)))
     intermediateFile.close()
 
     return probedNodes, theta, rewards
@@ -484,7 +487,10 @@ def write_intermediate(epoch, reward, currentValue, delta, jump, p, theta, inter
 ###### CODE FOR STARTING EXPERIMENT ######
 def RunIteration(G, alpha_input, episodes, epochs , initialNodes, Resultfile='output_file.txt', policy='NOL', regularization = 'nonnegative', order =
                  'linear', reward_function = 'new_nodes', saveGAP = 0, current_iteration=0, p = None, decay=0, k=4, target_attribute = None, burn_in=0):
-    theta_estimates = np.random.uniform(-0.2, 0.2,(G.get_numfeature(),))     # Initialize estimates at all 0.5
+    if policy not in ['high', 'low', 'rand']:
+        theta_estimates = np.random.uniform(-0.2, 0.2,(G.get_numfeature(),))     # Initialize estimates at all 0.5
+    else:
+        theta_estimates = None
     initial_graph = G.copy()
 
     for episode in range(episodes):

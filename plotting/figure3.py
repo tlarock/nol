@@ -21,19 +21,21 @@ N = 10000
 start_probe = 0
 num_probes = 5000
 
-sample_dir = 'node-sample-0.01/'
+#sample_dir = 'node-sample-0.01/'
+#sample_dir = 'node-0.01/'
+sample_dir = 'node-0.010.01/'
+
 plots_base = '../results/plots/cumulative_reward/'
 results_base = '../results/'
-name = 'ba-graph_N-10000_m-5_m0-5/'
-name = 'N-10000_maxcc-0.95_maxgcc-0.15_avgDeg-10/'
-
 names = {
-    'synthetic/ba-graph_N-10000_m-5_m0-5/':('BA',10000),
-    'synthetic/N-10000_maxcc-0.95_maxgcc-0.15_avgDeg-10/': ('BTER', 10000),
-    'cora/': ('Cora', 23000),
-    'dblp/': ('DBLP', 6700),
-    'enron/':('Enron', 36700),
-    'caida/':('Caida', 26500)
+    #'synthetic/ba-graph_N-10000_m-5_m0-5/':('BA',10000),
+    #'synthetic/N-10000_maxcc-0.95_maxgcc-0.15_avgDeg-10/': ('BTER', 10000),
+    #'cora/': ('Cora', 23000),
+    #'dblp/': ('DBLP', 6700),
+    #'enron/':('Enron', 36700),
+    #'caida/':('Caida', 26500),
+    'regular/':('Regular', 10000),
+    'synthetic/er-graph_N-10000_p-0.001/':('ER', 10000)
 }
 
 for name in names:
@@ -48,6 +50,8 @@ for name in names:
             (input_dir + 'baseline-new_nodes-rand/network1/rand_a0.csv', 'Random', '-'),
             (input_dir + 'baseline-new_nodes-high-jump//network1/high_a0.csv', 'High + Jump', '-'),
             (input_dir + 'baseline-new_nodes-high/network1/high_a0.csv', 'High', '-'),
+            (input_dir + 'baseline-new_nodes-low/network1/low_a0.csv', 'Low', '-'),
+
             ]
 
 
