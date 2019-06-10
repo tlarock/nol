@@ -11,13 +11,64 @@ from sklearn_classifiers import *
 
 
 
-def RunEpisode(G, alpha, theta, epochs, Resultfile='output_file.txt', policy='NOL', regularization='nonnegative', featureOrder='linear',
-             reward_function='new_nodes', saveGap=0, episode=0, iteration=0, p = None, decay=0, k=4, target_attribute = None, burn_in=0):
+def nol(G, alpha, budget, output_dir='output_file.txt', policy='NOL', regularization='nonnegative',
+             reward_function='new_nodes', saveGap=0, iteration=0, epsilon = None, decay=0, k=4, target_attribute = None, burn_in=0):
+    '''
+    Beginning from a sample network, run an algorithm that grows the network by querying nodes and
+    acquiring their information.
+
+    Parameters
+    ----------
+    G (nol.Network)
+        A Network object. This object contains both the sampled network and the complete network.
+    alpha (float)
+        Learning rate for the learning algorithms
+    theta (np.array)
+        Parameters to be learned, usually initialized randomly
+    budget (int)
+        Number of queries to make of the underlying network. The budget for probing.
+    output_dir (str)
+        Path to an output directory
+    policy (str)
+        The method for choosing which node to query. Can require learning (e.g. NOL, NOL-HTR) or heuristic (e.g. high, rand).
+    regularization (str)
+        Method for regularizing parameters theta.
+    reward_function (str)
+        Objective to be maximized. Defaul it new_nodes (maximize node cover)
+    saveGap (int)
+        If > 0, features and graph will be output every saveGap queries. if <=0, graph/node data is not saved.
+    iteration (int)
+        Iteration number. Used to construct filename.
+    epsilon (float)
+        Jump probability for epsilon-greedy methods
+    decay (int)
+        If 1, apply exponential decay over time to jump probability p
+    k (int)
+        k for Heavy Tail Regression
+    target_attribute (int)
+        Index in attribute_dict[node] corresponding to the attribute of interest if using NOL for search.
+    burn_in (int)
+        Number of queries to conduct using heuristic method to train parameters.
+
+    Returns
+    -------
+    probedNodes (list)
+        List of nodes that were probed in the experiment
+    theta (np.array)
+        Parameters learned through querying (if applicable; otherwise random vector)
+    rewards (list)
+        List of rewards for each query.
+    '''
+
     if policy not in ['high', 'low', 'rand']:
-        features = G.calculate_features(G, featureOrder)
+        features = G.calculate_features(G)
+        theta = np.random.uniform(-0.2, 0.2, (G.get_numfeature(),))
+        if policy == 'NOL':
+            samples_mat = None
     else:
         features = None
         samples_mat = None
+        theta = None
 
     probedNodes = []
     unprobedNodeSet = G.sample_node_set.copy()
@@ -25,24 +76,24 @@ def RunEpisode(G, alpha, theta, epochs, Resultfile='output_file.txt', policy='NO
     graphSaveInterval = saveGap
 
     ## initialize log files
-    intermediate_result_dir = os.path.join(Resultfile, 'intermediate_results')
+    intermediate_result_dir = os.path.join(output_dir, 'intermediate_results')
     if not os.path.exists(intermediate_result_dir):
         os.makedirs(intermediate_result_dir)
-    intermediate_name = os.path.join(intermediate_result_dir, policy + '_iter' + str(iteration) + '_episode_' + str(episode) + '_intermediate.txt')
+    intermediate_name = os.path.join(intermediate_result_dir, policy + '_iter' + str(iteration) + '_intermediate.txt')
     with open(intermediate_name, 'w+') as intermediateFile:
-        intermediateFile.write('epoch\treward\testimate\tdelta\tjump\tp')
+        intermediateFile.write('query\treward\testimate\tdelta\tjump\tp')
         if policy not in ['high', 'low', 'rand']:
             for i in range(theta.shape[0]):
                 intermediateFile.write('\tTheta[' + str(i) + ']')
         intermediateFile.write('\n')
 
-    intermediate_graph_dir = os.path.join(Resultfile, 'intermediate_graphs')
+    intermediate_graph_dir = os.path.join(output_dir, 'intermediate_graphs')
     if not os.path.exists(intermediate_graph_dir):
         os.makedirs(intermediate_graph_dir)
     intermediateGraphFile = os.path.join(intermediate_graph_dir, policy + '_iter' + str(iteration) + '_graph.txt')
     open(intermediateGraphFile, 'w').close()
     if policy not in ['high', 'low', 'rand']:
-        featureFileDir = os.path.join(Resultfile, 'feature_analysis')
+        featureFileDir = os.path.join(output_dir, 'feature_analysis')
         if not os.path.exists(featureFileDir):
             os.makedirs(featureFileDir)
 
@@ -73,17 +124,14 @@ def RunEpisode(G, alpha, theta, epochs, Resultfile='output_file.txt', policy='NO
         rewards = [1]*initialTargetNodes
 
     count = 0
-    interval = 500
-    epoch = 0
-    if burn_in <= 0:
-        if reward_function == 'attribute' or policy in ['high', 'low', 'rand']:
-            values = get_values(G, policy, samples_mat, features, unprobedNodeIndices, unprobedNodeSet)
-        else:
-            values = features.dot(theta)
-            values = {idx:values[idx] for idx in G.row_to_node.keys() if idx in unprobedNodeIndices}
+    print_interval = 500
+    query = 0
 
-    ## burn in phase
+    ## Default: no burn-in phase
+    if burn_in <= 0:
+            values = get_values(G, policy, samples_mat, features, unprobedNodeIndices, unprobedNodeSet, theta)
     elif burn_in > 0:
+        ## burn in phase
         logging.info('# burn in queries: ' + str(burn_in))
         for _ in range(burn_in):
             if reward_function == 'attribute':
@@ -120,28 +168,28 @@ def RunEpisode(G, alpha, theta, epochs, Resultfile='output_file.txt', policy='NO
             ## update samples matrix
             if policy not in ['high', 'low', 'rand']:
                 samples_mat = np.vstack( (samples_mat, np.append(features[nodeIndex], np.array([absoluteReward])) ) )
-                features = G.update_features(G, probedNode, order=featureOrder)
+                features = G.update_features(G, probedNode)
 
-            values = get_values(G, policy, samples_mat, features, unprobedNodeIndices, unprobedNodeSet)
+            values = get_values(G, policy, samples_mat, features, unprobedNodeIndices, unprobedNodeSet, theta)
 
-            write_intermediate(epoch, absoluteReward, 0, 0, 0, p, theta, intermediate_name)
+            write_intermediate(query, absoluteReward, 0, 0, 0, p, theta, intermediate_name)
             write_query(G, probedNode, targetNodeSet, intermediateGraphFile)
-            if (saveGap != 0 and graphSaveInterval == (saveGap)) or epoch == (epochs-1):
-                if epoch == (epochs - 1):
-                    epoch += 1
+            if (saveGap != 0 and graphSaveInterval == (saveGap)) or query == (budget-1):
+                if query == (budget - 1):
+                    query += 1
                 graphSaveInterval = 0
                 if policy not in ['high', 'low', 'rand']:
-                    featureFileName = policy + '_iter' + str(iteration) + '_features_' + str(epoch) + '.txt'
+                    featureFileName = policy + '_iter' + str(iteration) + '_features_' + str(query) + '.txt'
                     featureFile = os.path.abspath(os.path.join(featureFileDir, featureFileName))
                     write_features(G, features, featureFile)
 
             graphSaveInterval += 1
-            epoch += 1
+            query += 1
 
-    while epoch < epochs:
-        if count == interval:
+    while query < budget:
+        if count == print_interval:
             count = 0
-            logging.info('Iteration: ' + str(iteration) + ' Epoch: ' + str(epoch))
+            logging.info('Iteration: ' + str(iteration) + ' Epoch: ' + str(query))
         count += 1
 
         ## probe a node, get the reward
@@ -150,7 +198,7 @@ def RunEpisode(G, alpha, theta, epochs, Resultfile='output_file.txt', policy='NO
         if reward_function == 'attribute':
             numberOfTargetNodes = len(targetNodeSet) - initialTargetNodes
         ## Choose a node (index) to probe
-        nodeIndex, jump = action(G, policy, values, unprobedNodeIndices, p)
+        nodeIndex, jump = action(G, policy, values, unprobedNodeIndices, epsilon)
 
         ## Get the node id
         probedNode = G.row_to_node[nodeIndex]
@@ -160,27 +208,14 @@ def RunEpisode(G, alpha, theta, epochs, Resultfile='output_file.txt', policy='NO
         if reward_function == 'new_edges':
             new_neighbors = G.complete_graph_adjlist[probedNode]
             num_new_edges = len([ne for ne in new_neighbors if ne not in G.sample_adjlist_sets[probedNode]])
-        elif reward_function == 'nodes_and_triangles':
-            new_neighbors = G.complete_graph_adjlist[probedNode]
-            new_edges = [ne for ne in new_neighbors if ne not in G.sample_adjlist_sets[probedNode]]
-            num_new_triangles = 0
-            for u in new_edges:
-                    for v in new_edges:
-                        if u == v:
-                            continue
-                        ## check if a triangle was closed
-                        if v in G.sample_adjlist_sets.keys() and u in G.sample_adjlist_sets[v]:
-                            num_new_triangles += 1
-                        elif u in G.sample_adjlist_sets.keys() and v in G.sample_adjlist_sets[u]:
-                            num_new_triangles += 1
 
         ## Actually probe the node
         new_nodes = G.probe(probedNode)  # probe the node and get the novel neighbors
+        new_nodes = set(new_nodes)
         if reward_function == 'attribute':
             if target_attribute in G.attribute_dict[probedNode]:
                 targetNodeSet.add(probedNode)
 
-        new_nodes = set(new_nodes)
         new_unprobed = new_nodes - G.probedNodeSet
 
         ## Update the sets of nodes 
@@ -200,8 +235,6 @@ def RunEpisode(G, alpha, theta, epochs, Resultfile='output_file.txt', policy='NO
             reward = len(G.node_to_row) - numberOfNodes
         elif reward_function == 'new_edges':
             reward = num_new_edges
-        elif reward_function == 'nodes_and_triangles':
-            reward = (len(G.node_to_row) - numberOfNodes) + num_new_triangles
         elif reward_function == 'attribute':
             reward = len(targetNodeSet) - initialTargetNodes - numberOfTargetNodes
 
@@ -209,7 +242,7 @@ def RunEpisode(G, alpha, theta, epochs, Resultfile='output_file.txt', policy='NO
         rewards.append(reward)
 
         if policy == 'NOL-HTR':
-            if epoch == 0:
+            if query == 0:
                 samples_mat = update_samples_matrix(None, features, nodeIndex, reward, reward_function, targetNodeSet)
             else:
                 samples_mat = update_samples_matrix(samples_mat, features, nodeIndex, reward, reward_function, targetNodeSet)
@@ -225,18 +258,14 @@ def RunEpisode(G, alpha, theta, epochs, Resultfile='output_file.txt', policy='NO
             currentGradient = features[nodeIndex, :].copy()
 
             ## update the features    
-            features = G.update_features(G, probedNode, order=featureOrder)
+            features = G.update_features(G, probedNode)
 
             ## Delta is the difference from between expecation and reward
             delta = reward - currentValue
 
 
         ## compute value per node
-        if policy in ['NOL', 'NOL-HTR']:
-            values = features.dot(theta)
-            values = {idx:values[idx] for idx in G.row_to_node.keys() if idx in unprobedNodeIndices}
-        else:
-            values = get_values(G, policy, samples_mat, features, unprobedNodeIndices, unprobedNodeSet)
+        values = get_values(G, policy, samples_mat, features, unprobedNodeIndices, unprobedNodeSet,theta)
 
 
         if len(unprobedNodeIndices) == 0:
@@ -249,52 +278,30 @@ def RunEpisode(G, alpha, theta, epochs, Resultfile='output_file.txt', policy='NO
         elif policy == 'NOL-HTR':
             theta = median_of_means(samples_mat, theta, alpha, reward-currentValue, regularization, k, number_unprobed=len(unprobedNodeIndices))
 
-        if regularization == 'nonnegative':
-            theta[theta < 0] = 0
-        elif regularization == 'normalized':
-            theta = theta/np.linalg.norm(theta)
-        elif regularization == 'pos_normalized':
-            theta[theta < 0] = 0
-            if np.linalg.norm(theta) > 0:
-                theta = theta/np.linalg.norm(theta)
-        elif regularization != 'no':
-            logging.warning("Unrecognized regularization type\"" + regularization + "\\. Defaulting to no normalization.")
-
+        theta = regularize_theta(theta, regularization)
         ## Get the new value mapping
         ## compute value per node
-        if policy in ['NOL', 'NOL-HTR']:
-            values = features.dot(theta)
-            values = {idx:values[idx] for idx in G.row_to_node.keys() if idx in unprobedNodeIndices}
-        else:
-            values = get_values(G, policy, samples_mat, features, unprobedNodeIndices, unprobedNodeSet)
-
-        if policy == 'NOL' or policy == 'globalmax_jump':
-            if jump is True:
-                jval = 1
-            elif jump is False:
-                jval = 0
-            else:
-                logging.info('SOMETHING IS WRONG WITH JUMP SWITCH!')
+        values = get_values(G, policy, samples_mat, features, unprobedNodeIndices, unprobedNodeSet, theta)
 
         if len(unprobedNodeIndices) == 0:
             break
 
         if policy not in ['high', 'low', 'rand']:
-            write_intermediate(epoch, reward, currentValue, delta, jump, p, theta, intermediate_name)
+            write_intermediate(query, reward, currentValue, delta, jump, epsilon, theta, intermediate_name)
         else:
-            write_intermediate(epoch, reward, 0, 0, jump, p, None, intermediate_name)
+            write_intermediate(query, reward, 0, 0, jump, epsilon, None, intermediate_name)
+
+        ## Write graph query to output file
         write_query(G, probedNode, targetNodeSet, intermediateGraphFile)
-        if (saveGap != 0 and graphSaveInterval == (saveGap)) or epoch == (epochs-1):
+        if (saveGap != 0 and graphSaveInterval == (saveGap)) or (query == (budget-1) and saveGap > 0):
             graphSaveInterval = 0
             if policy not in ['high', 'low', 'rand']:
-                featureFileName = policy + '_iter' + str(iteration) + '_features_' + str(epoch) + '.txt'
+                featureFileName = policy + '_iter' + str(iteration) + '_features_' + str(query) + '.txt'
                 featureFile = os.path.abspath(os.path.join(featureFileDir, featureFileName))
                 write_features(G, features, featureFile)
 
         graphSaveInterval += 1
-
-        graphSaveInterval += 1
-        epoch += 1
+        query += 1
 
     logging.info('Total reward: ' + str(sum(rewards)))
     intermediateFile.close()
@@ -302,14 +309,28 @@ def RunEpisode(G, alpha, theta, epochs, Resultfile='output_file.txt', policy='NO
     return probedNodes, theta, rewards
 
 
-def action(G, policy, values, unprobedNodeIndices, p = -1):
+def action(G, policy, values, unprobedNodeIndices, epsilon = -1):
     """
-    Accepts: Network object, list of locally adjacent nodes to the most
-                recently probed node (for local methods).
-                The policy to probe with.
-                Current value function.
-                Set of unprobed indices.
-    Returns: the next action (node index to probe) dictated by the policy.
+    Parameters
+    ----------
+    G: (nol.Network)
+        The observed network object
+    policy: (str)
+        The policy to choose the next node to query
+    values: (dict)
+        Current value function, form <node_id, predicted_val>
+    unprobedNodeIndices: (list)
+        List of indices of unprobed nodes
+    epsilon: (float)
+        Jump probability.
+
+    Returns
+    -------
+    idx: (int)
+        The node index of the next action
+    jump: (int)
+        If 1, then action is a random jump. If 0, action is following policy.
+
     """
     idx = []
     unprobedNodeList = [row for row in G.row_to_node.keys() if row in unprobedNodeIndices]
@@ -318,28 +339,34 @@ def action(G, policy, values, unprobedNodeIndices, p = -1):
     if policy == 'rand':
         ## Pick a uniformly random node
         idx = np.random.choice(unprobedNodeList, 1)[0]
-        return idx, True
-    elif prob > p:
-        ## NOTE: Default value of p falls here
+        return idx, 1
+    elif prob > epsilon:
+        ## NOTE: Default value of epsilon falls here
         if policy == 'low':
             idx = min(values.items(), key=lambda kv: kv[1])[0]
         else:
             ## Choose the node with the maximum value
             idx = max(values.items(), key=lambda kv: kv[1])[0]
-        return idx, False
+        return idx, 0
     else:
-        ## with probability p, pick a node at random
+        ## with probability epsilon, pick a node at random
         ## choose all of the initial sample nodes first,
         ## then uniform from all remaining unprobed
         not_probed_initial = list(G.original_node_set - G.probedNodeSet)
         if len(not_probed_initial) > 0:
             node = np.random.choice(not_probed_initial, 1)[0]
-            return G.node_to_row[node], True
+            return G.node_to_row[node], 1
         else:
-            return np.random.choice(unprobedNodeList, 1)[0], True
+            return np.random.choice(unprobedNodeList, 1)[0], 1
 
-def get_values(G, policy, samples_mat, features, unprobedNodeIndices, unprobedNodeSet):
-    if policy == 'svm':
+def get_values(G, policy, samples_mat, features, unprobedNodeIndices, unprobedNodeSet, theta=None):
+    '''
+    Compute and return the value function for a given policy.
+    '''
+    if policy in ['NOL', 'NOL-HTR']:
+        values = features.dot(theta)
+        values = {idx:values[idx] for idx in G.row_to_node.keys() if idx in unprobedNodeIndices}
+    elif policy == 'svm':
         values = compute_svm_values(samples_mat, features, unprobedNodeIndices)
     elif policy == 'knn':
         values = compute_knn_values(samples_mat, features, unprobedNodeIndices)
@@ -360,11 +387,28 @@ def get_values(G, policy, samples_mat, features, unprobedNodeIndices, unprobedNo
 
     return values
 
+
+def regularize_theta(theta, regularization):
+    '''
+    Regularize the theta parameter according to specified regularization.
+    '''
+    if regularization == 'nonnegative':
+        theta[theta < 0] = 0
+    elif regularization == 'normalized':
+        theta = theta/np.linalg.norm(theta)
+    elif regularization == 'pos_normalized':
+        theta[theta < 0] = 0
+        if np.linalg.norm(theta) > 0:
+            theta = theta/np.linalg.norm(theta)
+    elif regularization != 'no':
+        logging.warning("Unrecognized regularization type\"" + regularization + "\\. Defaulting to no normalization.")
+
+    return theta
+
 ########################### CODE FOR NOL ONLINE REGRESSION ###########################
 
 def online_regression_update(theta, alpha, reward, value, node_features):
-    loss = (reward - value)**2
-
+    ## Compute the gradient (based on loss=(reward-value)**2)
     gradient = -2*(reward - value) * node_features
 
     ## update theta
@@ -473,30 +517,12 @@ def write_features(G, features, featureFile):
             f_feats.write(str(G.row_to_node[i]) + ',' + ','.join([str(val) for val in features[i]]) + '\n')
 
 
-def write_intermediate(epoch, reward, currentValue, delta, jump, p, theta, intermediate_name):
+def write_intermediate(query, reward, currentValue, delta, jump, p, theta, intermediate_name):
     with open(intermediate_name, 'w+') as intermediateFile:
         # write intermediate numbers
-        intermediateFile.write(str(epoch) + '\t' + str(reward) +  '\t' + str(currentValue)  + '\t'+ str(delta) + '\t' + str(jump) + '\t' + str(p))
+        intermediateFile.write(str(query) + '\t' + str(reward) +  '\t' + str(currentValue)  + '\t'+ str(delta) + '\t' + str(jump) + '\t' + str(p))
 
         if theta is not None:
             for i in range(theta.shape[0]):
                 intermediateFile.write('\t' + str(theta[i]))
         intermediateFile.write('\n')
-
-
-###### CODE FOR STARTING EXPERIMENT ######
-def RunIteration(G, alpha_input, episodes, epochs , initialNodes, Resultfile='output_file.txt', policy='NOL', regularization = 'nonnegative', order =
-                 'linear', reward_function = 'new_nodes', saveGAP = 0, current_iteration=0, p = None, decay=0, k=4, target_attribute = None, burn_in=0):
-    if policy not in ['high', 'low', 'rand']:
-        theta_estimates = np.random.uniform(-0.2, 0.2,(G.get_numfeature(),))     # Initialize estimates at all 0.5
-    else:
-        theta_estimates = None
-    initial_graph = G.copy()
-
-    for episode in range(episodes):
-        logging.info("episode: " + str(episode))
-        probed_nodes, theta, rewards = RunEpisode(G, alpha_input, theta_estimates, epochs, Resultfile, policy, regularization, order, reward_function, saveGAP, episode, current_iteration, p, decay, k, target_attribute, burn_in)
-
-        theta_estimates = theta # Update value estimates
-        G = initial_graph.copy() # reset G to the original sample
-    return probed_nodes, theta, rewards
