@@ -63,8 +63,7 @@ def nol(G, alpha, budget, output_dir='output_file.txt', policy='NOL', regulariza
     if policy not in ['high', 'low', 'rand']:
         features = G.calculate_features(G)
         theta = np.random.uniform(-0.2, 0.2, (G.get_numfeature(),))
-        if policy == 'NOL':
-            samples_mat = None
+        samples_mat = None
     else:
         features = None
         samples_mat = None
@@ -129,7 +128,11 @@ def nol(G, alpha, budget, output_dir='output_file.txt', policy='NOL', regulariza
 
     ## Default: no burn-in phase
     if burn_in <= 0:
+        if policy != 'NOL-HTR':
             values = get_values(G, policy, samples_mat, features, unprobedNodeIndices, unprobedNodeSet, theta)
+        else:
+            values = get_values(G, 'NOL', samples_mat, features, unprobedNodeIndices, unprobedNodeSet, theta)
+
     elif burn_in > 0:
         ## burn in phase
         logging.info('# burn in queries: ' + str(burn_in))
@@ -196,7 +199,8 @@ def nol(G, alpha, budget, output_dir='output_file.txt', policy='NOL', regulariza
         ## need the number of nodes before the probe
         numberOfNodes = len(G.node_to_row)
         if reward_function == 'attribute':
-            numberOfTargetNodes = len(targetNodeSet) - initialTargetNodes
+            numberOfTargetNodes = len(targetNodeSet) - initialTargetNodes 
+
         ## Choose a node (index) to probe
         nodeIndex, jump = action(G, policy, values, unprobedNodeIndices, epsilon)
 
@@ -464,8 +468,8 @@ def median_of_means(samples_mat, theta, alpha, delta, regularization, k_input, c
     medians = []
     if n > 1:
         for i in range(k):
-            ## TODO Add lambda_regres in here
-            vals = [(thetas[i] - thetas[j]).dot((covariances[j])*(thetas[i] - thetas[j]))\
+            ## TODO This implementation assumes lambda = 0
+            vals = [(thetas[i] - thetas[j]).dot((covariances[j])*(thetas[i] + thetas[j]))\
                     for j in range(k) if j != i]
             medians.append(np.median(vals))
 
