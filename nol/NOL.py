@@ -69,6 +69,9 @@ def nol(G, alpha, budget, output_dir='output_file.txt', policy='NOL', regulariza
         samples_mat = None
         theta = None
 
+    if decay == 1:
+        input_epsilon = epsilon
+
     probedNodes = []
     unprobedNodeSet = G.sample_node_set.copy()
     unprobedNodeIndices = {G.node_to_row[i] for i in unprobedNodeSet}
@@ -128,10 +131,10 @@ def nol(G, alpha, budget, output_dir='output_file.txt', policy='NOL', regulariza
 
     ## Default: no burn-in phase
     if burn_in <= 0:
-        if policy != 'NOL-HTR':
-            values = get_values(G, policy, samples_mat, features, unprobedNodeIndices, unprobedNodeSet, theta)
-        else:
+        if policy in ['NOL-HTR', 'NOL']:
             values = get_values(G, 'NOL', samples_mat, features, unprobedNodeIndices, unprobedNodeSet, theta)
+        else:
+            values = get_values(G, policy, samples_mat, features, unprobedNodeIndices, unprobedNodeSet, theta)
 
     elif burn_in > 0:
         ## burn in phase
@@ -189,6 +192,7 @@ def nol(G, alpha, budget, output_dir='output_file.txt', policy='NOL', regulariza
             graphSaveInterval += 1
             query += 1
 
+    ## Begin querying following specified policy
     while query < budget:
         if count == print_interval:
             count = 0
@@ -267,25 +271,26 @@ def nol(G, alpha, budget, output_dir='output_file.txt', policy='NOL', regulariza
             ## Delta is the difference from between expecation and reward
             delta = reward - currentValue
 
-
-        ## compute value per node
-        values = get_values(G, policy, samples_mat, features, unprobedNodeIndices, unprobedNodeSet,theta)
-
-
         if len(unprobedNodeIndices) == 0:
             break
 
         old_theta = theta
 
         if policy == 'NOL':
-            theta = online_regression_update(theta, alpha, reward, currentValue, currentGradient)
+            theta = online_regression_update(theta, alpha, delta, currentGradient)
         elif policy == 'NOL-HTR':
             theta = median_of_means(samples_mat, theta, alpha, reward-currentValue, regularization, k, number_unprobed=len(unprobedNodeIndices))
 
+        ## regularize the parameters
         theta = regularize_theta(theta, regularization)
+
         ## Get the new value mapping
         ## compute value per node
         values = get_values(G, policy, samples_mat, features, unprobedNodeIndices, unprobedNodeSet, theta)
+
+        ## decay epsilon if necessary
+        if decay == 1:
+            epsilon = input_epsilon * (np.exp(-1*query/queries))
 
         if len(unprobedNodeIndices) == 0:
             break
@@ -411,12 +416,33 @@ def regularize_theta(theta, regularization):
 
 ########################### CODE FOR NOL ONLINE REGRESSION ###########################
 
-def online_regression_update(theta, alpha, reward, value, node_features):
+def online_regression_update(theta, alpha, delta, node_features):
+    '''
+    Updates parameters using online linear regression (Strehl & Littman 2008)
+
+    Parameters
+    ----------
+    theta: (np.array)
+        the current parameters
+    alpha: (float)
+        learning rate
+    reward: (float/int)
+        actual reward from query
+    value: (float/int)
+        predicted reward before query
+    node_feautres: (np.array)
+        the features of the queried node
+
+    Returns
+    -------
+    theta: (np.array)
+        the updated parameters
+    '''
     ## Compute the gradient (based on loss=(reward-value)**2)
-    gradient = -2*(reward - value) * node_features
+    gradient = (2*(delta)) * node_features
 
     ## update theta
-    theta = theta + alpha*gradient.T
+    theta = theta + (alpha*gradient.T)
 
     return theta
 
@@ -424,6 +450,13 @@ def online_regression_update(theta, alpha, reward, value, node_features):
 ########################### CODE FOR NOL-HTR ###########################
 
 def median_of_means(samples_mat, theta, alpha, delta, regularization, k_input, confidence=0.05, lambda_regres=0.0, number_unprobed=0):
+    '''
+    Computes parameters using heavy tail regression (TODO: Citation)
+
+    Parameters
+    ----------
+    samples_mat: (np.array)
+    '''
 
     n = samples_mat.shape[0]
     if isinstance(k_input, int):

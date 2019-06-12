@@ -179,7 +179,7 @@ if __name__ == '__main__':
                         help='default, refex or node2vec features')
     parser.add_argument('--reward', dest='reward_function', choices=['new_nodes', 'new_edges', 'nodes_and_triangles', 'new_nodes_local', 'attribute'],
                         help='new_nodes, new_edges or nodes_and_triangles reward function.')
-    parser.add_argument('-p', dest='p', type=float, default=0.3, help='Probability of random jump in jump strategy.')
+    parser.add_argument('-p', dest='p', type=float, default=0.0, help='Probability of random jump in jump strategy.')
     parser.add_argument('--decay', dest='decay', type=int, default=0, help='If 1, apply exponential decay to random jump probability over time.')
 
     ## Arguments for NOL-HTR
