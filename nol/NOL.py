@@ -290,7 +290,7 @@ def nol(G, alpha, budget, output_dir='output_file.txt', policy='NOL', regulariza
 
         ## decay epsilon if necessary
         if decay == 1:
-            epsilon = input_epsilon * (np.exp(-1*query/queries))
+            epsilon = input_epsilon * (np.exp(-1*query/budget))
 
         if len(unprobedNodeIndices) == 0:
             break
@@ -556,6 +556,7 @@ def write_features(G, features, featureFile):
 
 def write_intermediate(query, reward, currentValue, delta, jump, p, theta, intermediate_name):
     with open(intermediate_name, 'w+') as intermediateFile:
+        print('writing intermediate')
         # write intermediate numbers
         intermediateFile.write(str(query) + '\t' + str(reward) +  '\t' + str(currentValue)  + '\t'+ str(delta) + '\t' + str(jump) + '\t' + str(p))
 
