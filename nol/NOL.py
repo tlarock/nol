@@ -82,7 +82,7 @@ def nol(G, alpha, budget, output_dir='output_file.txt', policy='NOL', regulariza
     if not os.path.exists(intermediate_result_dir):
         os.makedirs(intermediate_result_dir)
     intermediate_name = os.path.join(intermediate_result_dir, policy + '_iter' + str(iteration) + '_intermediate.txt')
-    with open(intermediate_name, 'w+') as intermediateFile:
+    with open(intermediate_name, 'w') as intermediateFile:
         intermediateFile.write('query\treward\testimate\tdelta\tjump\tp')
         if policy not in ['high', 'low', 'rand']:
             for i in range(theta.shape[0]):
@@ -555,7 +555,7 @@ def write_features(G, features, featureFile):
 
 
 def write_intermediate(query, reward, currentValue, delta, jump, p, theta, intermediate_name):
-    with open(intermediate_name, 'w+') as intermediateFile:
+    with open(intermediate_name, 'a') as intermediateFile:
         print('writing intermediate')
         # write intermediate numbers
         intermediateFile.write(str(query) + '\t' + str(reward) +  '\t' + str(currentValue)  + '\t'+ str(delta) + '\t' + str(jump) + '\t' + str(p))
