@@ -439,7 +439,9 @@ def online_regression_update(theta, alpha, delta, node_features):
         the updated parameters
     '''
     ## Compute the gradient (based on loss=(reward-value)**2)
-    gradient = (2*(delta)) * node_features
+    # TODO: Why does it perform worse with a more correct derivative?
+    #gradient = (2*(delta)) * node_features
+    gradient = (delta) * node_features
 
     ## update theta
     theta = theta + (alpha*gradient.T)
