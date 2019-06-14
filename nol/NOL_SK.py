@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 import numpy as np
 np.set_printoptions(precision=3, suppress=True)
-from sklearn import linear_model
 import Network
 import sys
 import os
@@ -10,8 +9,7 @@ import logging
 from scipy import stats
 from sklearn.svm import SVC
 from sklearn.neighbors import KNeighborsClassifier
-from sklearn.linear_model import LogisticRegression
-from sklearn.linear_model import LinearRegression
+from sklearn.linear_model import LogisticRegression, LinearRegression
 from puAdapter import *
 
 
@@ -19,9 +17,7 @@ def RunEpisode(G, alpha, theta, epochs, Resultfile='output_file.txt', policy='lo
              reward_function='new_nodes', saveGap=0, episode=0, iteration=0, p = None, decay=0, target_attribute = None, burn_in=0):
     if policy not in ['high', 'low', 'rand']:
         features = G.calculate_features(G, featureOrder)
-    ## TODO Adhoc
-    values_list = []
-    rewards_list = []
+
     probedNodes = []
     unprobedNodeSet = G.sample_node_set.copy()
     unprobedNodeIndices = {G.node_to_row[i] for i in unprobedNodeSet}
@@ -70,29 +66,12 @@ def RunEpisode(G, alpha, theta, epochs, Resultfile='output_file.txt', policy='lo
             for node in targetNodeSet:
                 if i == 0:
                     samples_mat = np.append(features[G.node_to_row[node]], np.array([1]))
+                    if len(samples_mat.shape) == 1:
+                        ## If we use 1 seed, reshape the array to work with classifiers
+                        samples_mat = samples_mat.reshape(1, samples_mat.shape[0])
                 else:
                     samples_mat = np.vstack( (samples_mat, np.append(features[G.node_to_row[node]], np.array([1])) ) )
                 i+=1
-
-        if policy == 'svm':
-            values = compute_svm_values(samples_mat, features, unprobedNodeIndices)
-        elif policy == 'knn':
-            values = compute_knn_values(samples_mat, features, unprobedNodeIndices)
-        elif policy == 'logit':
-            y = samples_mat[:,samples_mat.shape[1]-1]
-            ## if there is only 1 class, use the 1 class prediction
-            if np.unique(y).shape[0] == 1:
-                for node in unprobedNodeSet:
-                    all_unprobed_mat = np.array(samples_mat)
-                    all_unprobed_mat = np.vstack( (all_unprobed_mat, np.append(features[G.node_to_row[node]], np.array([-1]))))
-                values, theta = compute_logit_values(all_unprobed_mat, features, unprobedNodeIndices, one_class=True)
-            else:
-                values, theta = compute_logit_values(samples_mat, features, unprobedNodeIndices)
-        elif policy == 'linreg':
-            values, theta = compute_linreg_values(samples_mat, features, unprobedNodeIndices)
-        elif policy in ['high', 'low', 'rand']:
-            values = compute_deg_values(G, unprobedNodeIndices)
-
 
         initialTargetNodes = len(targetNodeSet)
         logging.info('# initial target nodes: ' + str(initialTargetNodes))
@@ -157,7 +136,7 @@ def RunEpisode(G, alpha, theta, epochs, Resultfile='output_file.txt', policy='lo
             ## Update reward
             rewards.append(absoluteReward)
 
-            ## TODO Update sampled matrix
+            ## update sampled matrix
             if policy not in ['high', 'low', 'rand']:
                 samples_mat = np.vstack( (samples_mat, np.append(features[nodeIndex], np.array([absoluteReward])) ) )
                 features = G.update_features(G, probedNode, order=featureOrder)
@@ -219,6 +198,7 @@ def RunEpisode(G, alpha, theta, epochs, Resultfile='output_file.txt', policy='lo
 
         ## Choose a node to probe
         nodeIndex, jump = action(G, policy, values, unprobedNodeIndices, p)
+
         ## find the index node to probe according to policy
         probedNode = G.row_to_node[nodeIndex]
 

@@ -21,29 +21,38 @@ N = 10000
 start_probe = 0
 num_probes = 5000
 
-sample_dir = 'node-sample-0.01/'
+#sample_dir = 'node-sample-0.01/'
+#sample_dir = 'node-0.01/'
+sample_dir = 'node-0.01/'
+
 plots_base = '../results/plots/cumulative_reward/'
 results_base = '../results/'
-name = 'ba-graph_N-10000_m-5_m0-5/'
-name = 'N-10000_maxcc-0.95_maxgcc-0.15_avgDeg-10/'
-
 names = {
-    'synthetic/ba-graph_N-10000_m-5_m0-5/':'BA',
-    'synthetic/N-10000_maxcc-0.95_maxgcc-0.15_avgDeg-10/':'BTER',
-    'dblp/':'DBLP'
+    #'synthetic/ba-graph_N-10000_m-5_m0-5/':('BA',10000),
+    #'synthetic/N-10000_maxcc-0.95_maxgcc-0.15_avgDeg-10/': ('BTER', 10000),
+    #'cora/': ('Cora', 23000),
+    'dblp/': ('DBLP', 6700),
+    #'enron/':('Enron', 36700),
+    #'caida/':('Caida', 26500),
+    #'regular/':('Regular', 10000),
+    #'synthetic/er-graph_N-10000_p-0.001/':('ER', 10000)
 }
 
 for name in names:
+    N = names[name][1]
     input_dir = results_base + name + sample_dir
 
-    nonpara_results = '/Users/larock/git/nol/baseline/net_complete/mab_explorer/results/ba_rn_results'
+    nonpara_results = '/Users/larock/git/nol/baseline/net_complete/mab_explorer/results/DBLP'
+    #nonpara_results = '/Users/larock/git/nol/baseline/net_complete/mab_explorer/results/BTER'
+
     input_files = [
             (input_dir + 'default-new_nodes-NOL-epsilon-0.3-decay-1/network1/NOL_a0.01.csv', r'NOL($\epsilon=0.3$)', '-'),
             (input_dir + 'default-new_nodes-NOL-HTR-epsilon-0.3-decay-1/network1/NOL-HTR_a0.01.csv', r'NOL-HTR($\epsilon_0=0.3$,$k=\ln(n)$)', '-'),
-            #(nonpara_results + '_KNN-UCB.csv', r'KNN($k=20$)-UCB($\alpha=2.0$)', '-'),
+            (nonpara_results + '_KNN-UCB.csv', r'KNN($k=20$)-UCB($\alpha=2.0$)', '-'),
             (input_dir + 'baseline-new_nodes-rand/network1/rand_a0.csv', 'Random', '-'),
             (input_dir + 'baseline-new_nodes-high-jump//network1/high_a0.csv', 'High + Jump', '-'),
             (input_dir + 'baseline-new_nodes-high/network1/high_a0.csv', 'High', '-'),
+            #(input_dir + 'baseline-new_nodes-low/network1/low_a0.csv', 'Low', '-'),
             ]
 
 
@@ -89,5 +98,5 @@ for name in names:
                 legobj.set_linewidth(3.0)
 
         plt.tight_layout()
-        out_name = names[name]
-        plt.savefig(plots_base + '/' + str(out_name) + '-' + out_reward_name + '-HTR-inset.pdf', dpi = 300)
+        out_name = names[name][0]
+        plt.savefig(plots_base + '/' + str(out_name) + '-' + out_reward_name + '.pdf', dpi = 300)

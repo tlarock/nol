@@ -82,7 +82,6 @@ def netdisc_sample(adjacency_list, attribute_dict, target_att, k):
 
     ## get the labeled nodes
     anomalous_nodes = [node for node, attr_lst in attribute_dict.items() if target_att in attr_lst]
-
     ## sample from the anomalous nodes
     sampled_anomalous = np.random.choice(anomalous_nodes, k, replace=False)
     ## add anomalous nodes and their neighbors to sample
@@ -94,8 +93,8 @@ def netdisc_sample(adjacency_list, attribute_dict, target_att, k):
             sample_adjlist[node][ne] = dict()
             sample_adjlist[ne][node] = dict()
             nodes.add(ne)
-            if (ne, node) not in edges:
-                edges.add((node,ne))
+            edges.add((ne,node))
+            edges.add((node,ne))
 
     return sample_adjlist, nodes, edges
 
