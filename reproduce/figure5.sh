@@ -2,8 +2,8 @@
 # NOTE: This script relise on the NOL enviornment variable pointing to
 # the highest level directory. e.g. export NOL=path/to/nol
 
-iterations='20'
-budget='5000'
+iterations='2'
+budget='50'
 alpha=0.01
 featuretype='default'
 rewardfunction='new_nodes'

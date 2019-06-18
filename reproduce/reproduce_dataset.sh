@@ -41,6 +41,9 @@ case ${dataset} in 'ba')
 	data_dir='enron/';;
 'regular')
 	data_dir='regular/';;
+'twitter')
+	data_dir='twitter/'
+	budget=50000;;
 esac
 
 base_input=${NOL}'/data/'${data_dir}

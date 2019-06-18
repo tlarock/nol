@@ -9,6 +9,8 @@ Created on Mon Jun  3 15:32:41 2019
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import sys
+argv = sys.argv
 
 legend=True
 title_size = 37
@@ -27,16 +29,24 @@ sample_dir = 'node-0.01/'
 
 plots_base = '../results/plots/cumulative_reward/'
 results_base = '../results/'
-names = {
-    'synthetic/ba-graph_N-10000_m-5_m0-5/':('BA',10000),
-    'synthetic/N-10000_maxcc-0.95_maxgcc-0.15_avgDeg-10/': ('BTER', 10000),
-    'cora/': ('Cora', 23000),
-    'dblp/': ('DBLP', 6700),
-    'enron/':('Enron', 36700),
-    'caida/':('Caida', 26500),
-    'regular/':('Regular', 10000),
-    'synthetic/er-graph_N-10000_p-0.001/':('ER', 10000)
-}
+if len(argv) == 1 or argv[1] == '3':
+    names = {
+        'synthetic/ba-graph_N-10000_m-5_m0-5/':('BA',10000),
+        'synthetic/N-10000_maxcc-0.95_maxgcc-0.15_avgDeg-10/': ('BTER', 10000),
+        'cora/': ('Cora', 23000),
+        'dblp/': ('DBLP', 6700),
+        'enron/':('Enron', 36700),
+        'caida/':('Caida', 26500),
+        'regular/':('Regular', 10000),
+        'synthetic/er-graph_N-10000_p-0.001/':('ER', 10000)
+    }
+elif argv[1] == '6':
+    names = {
+        'twitter/': ('Twitter', 90000)
+    }
+else:
+    print('Invalid figure number specified.')
+    names = {}
 
 for name in names:
     N = names[name][1]
@@ -96,6 +106,28 @@ for name in names:
             # set the linewidth of each legend object
             for legobj in leg.legendHandles:
                 legobj.set_linewidth(3.0)
+
+        if name == 'twitter':
+            inset_start_probe = 500
+            inset_end_probe = 2000
+            for i in range(len(input_files)):
+                try:
+                    df = pd.read_table(input_files[i][0])
+                except Exception as e:
+                    print(e)
+                    df = None
+                    continue
+
+                a = plt.axes([.27, .697, .24, .24])
+                a.tick_params(axis='x', labelsize=14)
+                if 'default' not in input_files[i][0]:
+                    a.plot(df['Probe'][inset_start_probe:inset_end_probe]/ float(N), df['AvgRewards'][inset_start_probe:inset_end_probe], color='C'+str(i+1), linewidth = 2.0, label=input_files[i][1], linestyle=input_files[i][2], alpha = 1.0)
+                    a.fill_between(df['Probe'][inset_start_probe:inset_end_probe]/ float(N), yminus[inset_start_probe:inset_end_probe], yplus[inset_start_probe:inset_end_probe], color='C'+str(i+1), alpha=0.3)
+                else:
+                    a.plot(df['Probe'][inset_start_probe:inset_end_probe]/ float(N), df['AvgRewards'][inset_start_probe:inset_end_probe], linewidth = 2.0, label=input_files[i][1], linestyle=input_files[i][2], alpha = 1.0)
+                    a.fill_between(df['Probe'][inset_start_probe:inset_end_probe]/ float(N), yminus[inset_start_probe:inset_end_probe], yplus[inset_start_probe:inset_end_probe], alpha=0.3)
+                plt.setp(a, yticks=[])
+
 
         plt.tight_layout()
         out_name = names[name][0]
