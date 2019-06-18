@@ -81,7 +81,10 @@ log_file=../results/logs/low-${dataset}.out
 python3 ../nol/run_experiment.py -m  low -p ${epsilon} -i $base_input -s $sample_para -o $output_folder -n 1 -iter $iterations -b $budget --reward $rewardfunction --save_gap $savegap --processes $processes --log $log_file &
 
 
-wait
+if [ $3 == 'wait' ]
+then
+	wait
+fi
 ## KNN
 #knn=${NOL}/baseline/net_complete/mab_explorer/
 #cd ${knn}/mab_explorer/
