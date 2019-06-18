@@ -27,7 +27,7 @@ plt.rcParams['axes.labelsize'] = label_size
 plt.rcParams['font.size'] = font_size
 plt.rcParams['legend.fontsize'] = legend_font
 
-start_probe = 0
+start_probe = 50
 num_probes = 5000
 samples = ['0.01', '0.025', '0.05', '0.075', '0.1']
 network = 1
@@ -37,14 +37,12 @@ for generator, name in inputs:
     plt.xlabel(r'% Nodes Probed')
     plt.ylabel(r'Avg $E(t)$')
     for iteration in range(0, 10):
-        #plt.figure(figsize=(8,8))
         for sample in samples:
             values_list = []
-            input_file = generator + '/node-' + sample + '/default-new_nodes-NOL-epsilon-0.3-decay-1/network' \
-                        + str(network) + '/intermediate_results/NOL_iter' + str(iteration) + '_intermediate.txt'
+            input_file = generator + '/node-' + sample + '/default-new_nodes-NOL-HTR-epsilon-0.3-decay-1/network' \
+                        + str(network) + '/intermediate_results/NOL-HTR_iter' + str(iteration) + '_intermediate.txt'
             df = pd.read_table(input_file)
             data[sample].append(df[start_probe:num_probes]['delta'].fillna(0).abs().cumsum())
-            min_index = np.where(df[start_probe:num_probes]['delta'] == df[start_probe:num_probes]['delta'].min())[0][0]
 
     for sample in sorted(data.keys()):
         y = np.array(data[sample])

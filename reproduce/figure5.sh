@@ -23,11 +23,12 @@ for data_dir in "${data_dirs[@]}"
 do
 for sample_para in "${sample_sizes[@]}"
 do
-	base_input=${NOL}'/data/'${data_dir}
-	base_output=${NOL}'/results/'${data_dir}${sampling_method}-${sample_para}
-	output_folder=${base_output}/${featuretype}-${rewardfunction}'-NOL-epsilon-'${epsilon}-decay-$decay/
-	log_file=../results/logs/NOL-${sample_para}.out
-	python3 ../nol/run_experiment.py -m NOL -i $base_input -s $sample_para -o $output_folder -n 1 -iter $iterations -b $budget --alpha $alpha --feats $featuretype --reward $rewardfunction --save_gap $savegap -p $epsilon --decay $decay --burn $burnin --sampling-method $sampling_method --processes $processes --log $log_file &
+	ktype=funct
+	k=np.log
+	output_folder=${base_output}/${featuretype}-${rewardfunction}'-NOL-HTR-epsilon-'${epsilon}-decay-$decay/
+	log_file=../results/logs/NOL-HTR-${dataset}.out
+	python3 ../nol/run_experiment.py -m NOL-HTR -i $base_input -s $sample_para -o $output_folder -n 1 -iter $iterations -b $budget --alpha $alpha --feats $featuretype --reward $rewardfunction --save_gap $savegap -p $epsilon --decay $decay --ktype $ktype -k $k --burn $burnin --sampling-method $sampling_method --processes $processes --log $log_file &
+
 done
 done
 wait
