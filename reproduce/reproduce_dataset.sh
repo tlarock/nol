@@ -3,8 +3,8 @@
 set -ex
 
 dataset=$1
-sample_para=0.025
-iterations='2'
+sample_para=0.01
+iterations='20'
 budget='5000'
 alpha=0.01
 featuretype='default'
