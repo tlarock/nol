@@ -12,10 +12,12 @@ from collections import defaultdict
 results_base = '../results/synthetic/'
 
 inputs = [
-    #(results_base + 'N-10000_maxcc-0.95_maxgcc-0.15_avgDeg-10', 'BTER'),
+    (results_base + 'N-10000_maxcc-0.95_maxgcc-0.15_avgDeg-10', 'BTER'),
     (results_base + 'ba-graph_N-10000_m-5_m0-5', 'BA')
           ]
 
+#results_base = '../results/'
+#inputs = [(results_base + 'dblp/', 'DBLP')]
 ## initialize plot
 font_size = 21
 tick_size = 19
@@ -39,12 +41,13 @@ for generator, name in inputs:
     #plt.xlabel(r'$t$')
     plt.xlabel(r'% Nodes Probed')
     plt.ylabel(r'Avg $E(t)$')
-    for iteration in range(0, 2):
+    for iteration in range(0, 1):
         #plt.figure(figsize=(8,8))
         for sample in samples:
             values_list = []
             input_file = generator + '/node-' + sample + '/default-new_nodes-NOL-epsilon-0.3-decay-1/network' \
                         + str(network) + '/intermediate_results/NOL_iter' + str(iteration) + '_intermediate.txt'
+            print(input_file)
             df = pd.read_table(input_file)
             #data[sample].append(df[0:num_probes].where(df['jump'] == 0)['delta'].fillna(0).abs().cumsum())
             data[sample].append(df[start_probe:num_probes]['delta'].fillna(0).abs().cumsum())
