@@ -36,7 +36,7 @@ for generator, name in inputs:
     plt.figure(figsize=(10,7))
     plt.xlabel(r'% Nodes Probed')
     plt.ylabel(r'Avg $E(t)$')
-    for iteration in range(0, 10):
+    for iteration in range(0, 1):
         for sample in samples:
             values_list = []
             input_file = generator + '/node-' + sample + '/default-new_nodes-NOL-HTR-epsilon-0.3-decay-1/network' \

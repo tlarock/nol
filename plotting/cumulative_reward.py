@@ -40,12 +40,19 @@ if len(argv) == 1 or argv[1] == '3':
         'regular/':('Regular', 10000),
         'synthetic/er-graph_N-10000_p-0.001/':('ER', 10000)
     }
+elif argv[1] == '4':
+    names = {
+        'synthetic/lfr-graph_N-34546_mu-0.1/': ('LFR-1', 34546),
+        'synthetic/lfr-graph_N-34546_mu-0.2/': ('LFR-2', 34546),
+        'synthetic/lfr-graph_N-34546_mu-0.3/': ('LFR-3', 34546),
+        'synthetic/lfr-graph_N-34546_mu-0.4/': ('LFR-4', 34546)
+    }
 elif argv[1] == '6':
     names = {
         'twitter/': ('Twitter', 90000)
     }
 else:
-    print('Invalid figure number specified.')
+    print('Invalid figure number specified. Options are [3, 4, 6]. Nothing to do.')
     names = {}
 
 for name in names:
