@@ -139,10 +139,14 @@ def setup_experiments(model, input_directory, sample_fraction, output_folder, \
 
 def main(args):
     ## initialize logging
+    if not os.path.exists('../results/logs/'):
+        os.makedirs('../results/logs')
+
     if not args.log_file:
         log_file = "../results/logs/" + str(args.model) + "_" + str(args.iterations) + "_" + str(args.budget)+ ".out"
     else:
         log_file = args.log_file
+
     logging.basicConfig(filename=log_file, level=logging.DEBUG)
 
     ## Convert HTR arguments if necessary
