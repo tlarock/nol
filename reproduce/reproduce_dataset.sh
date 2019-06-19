@@ -1,5 +1,6 @@
 #!/bin/bash
-
+# NOTE: This script relies on the NOL enviornment variable pointing to
+# the highest level directory. e.g. export NOL=path/to/nol
 set -ex
 
 dataset=$1
@@ -88,6 +89,7 @@ if [ $3 == 'wait' ]
 then
 	wait
 fi
+
 ## KNN
 #knn=${NOL}/baseline/net_complete/mab_explorer/
 #cd ${knn}/mab_explorer/
