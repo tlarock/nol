@@ -1,7 +1,10 @@
 #!/bin/bash
-# NOTE: This script relise on the NOL enviornment variable pointing to
+# NOTE: This script relies on the NOL enviornment variable pointing to
 # the highest level directory. e.g. export NOL=path/to/nol
+set -ex
 
+ktype=funct
+k=np.log
 iterations='2'
 budget='50'
 alpha=0.01
@@ -21,15 +24,17 @@ sample_sizes=(0.01 0.025 0.05 0.075 0.1)
 
 for data_dir in "${data_dirs[@]}"
 do
-for sample_para in "${sample_sizes[@]}"
-do
-	ktype=funct
-	k=np.log
-	output_folder=${base_output}/${featuretype}-${rewardfunction}'-NOL-HTR-epsilon-'${epsilon}-decay-$decay/
-	log_file=../results/logs/NOL-HTR-${dataset}.out
-	python3 ../nol/run_experiment.py -m NOL-HTR -i $base_input -s $sample_para -o $output_folder -n 1 -iter $iterations -b $budget --alpha $alpha --feats $featuretype --reward $rewardfunction --save_gap $savegap -p $epsilon --decay $decay --ktype $ktype -k $k --burn $burnin --sampling-method $sampling_method --processes $processes --log $log_file &
+	for sample_para in "${sample_sizes[@]}"
+	do
+		output_folder=${base_output}/${featuretype}-${rewardfunction}'-NOL-HTR-epsilon-'${epsilon}-decay-$decay/
+		log_file=../results/logs/NOL-HTR-${dataset}.out
+		python3 ../nol/run_experiment.py -m NOL-HTR -i $base_input -s $sample_para -o $output_folder -n 1 -iter $iterations -b $budget --alpha $alpha --feats $featuretype --reward $rewardfunction --save_gap $savegap -p $epsilon --decay $decay --ktype $ktype -k $k --burn $burnin --sampling-method $sampling_method --processes $processes --log $log_file &
 
+	done
 done
-done
+
 wait
+
 ## PLOTTING CODE
+cd ../plotting/
+python figure5.py 

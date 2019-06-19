@@ -19,17 +19,14 @@ tick_size = 32
 label_size = 34
 legend_font = 19
 
-N = 10000
-start_probe = 0
-num_probes = 5000
-
-#sample_dir = 'node-sample-0.01/'
-#sample_dir = 'node-0.01/'
 sample_dir = 'node-0.01/'
 
 plots_base = '../results/plots/cumulative_reward/'
 results_base = '../results/'
 if len(argv) == 1 or argv[1] == '3':
+    start_probe = 0
+    num_probes = 5000
+
     names = {
         'synthetic/ba-graph_N-10000_m-5_m0-5/':('BA',10000),
         'synthetic/N-10000_maxcc-0.95_maxgcc-0.15_avgDeg-10/': ('BTER', 10000),
@@ -41,6 +38,9 @@ if len(argv) == 1 or argv[1] == '3':
         'synthetic/er-graph_N-10000_p-0.001/':('ER', 10000)
     }
 elif argv[1] == '4':
+    start_probe = 0
+    num_probes = 5000
+
     names = {
         'synthetic/lfr-graph_N-34546_mu-0.1/': ('LFR-1', 34546),
         'synthetic/lfr-graph_N-34546_mu-0.2/': ('LFR-2', 34546),
@@ -48,6 +48,9 @@ elif argv[1] == '4':
         'synthetic/lfr-graph_N-34546_mu-0.4/': ('LFR-4', 34546)
     }
 elif argv[1] == '6':
+    start_probe = 0
+    num_probes = 50000
+
     names = {
         'twitter/': ('Twitter', 90000)
     }
@@ -69,7 +72,7 @@ for name in names:
             (input_dir + 'baseline-new_nodes-rand/network1/rand_a0.csv', 'Random', '-'),
             (input_dir + 'baseline-new_nodes-high-jump//network1/high_a0.csv', 'High + Jump', '-'),
             (input_dir + 'baseline-new_nodes-high/network1/high_a0.csv', 'High', '-'),
-            #(input_dir + 'baseline-new_nodes-low/network1/low_a0.csv', 'Low', '-'),
+            (input_dir + 'baseline-new_nodes-low/network1/low_a0.csv', 'Low', '-'),
             ]
 
 
@@ -114,7 +117,8 @@ for name in names:
             for legobj in leg.legendHandles:
                 legobj.set_linewidth(3.0)
 
-        if name == 'twitter':
+        plt.tight_layout()
+        if names[name][0] == 'Twitter':
             inset_start_probe = 500
             inset_end_probe = 2000
             for i in range(len(input_files)):
@@ -125,7 +129,7 @@ for name in names:
                     df = None
                     continue
 
-                a = plt.axes([.27, .697, .24, .24])
+                a = plt.axes([.27, .697, .23, .23])
                 a.tick_params(axis='x', labelsize=14)
                 if 'default' not in input_files[i][0]:
                     a.plot(df['Probe'][inset_start_probe:inset_end_probe]/ float(N), df['AvgRewards'][inset_start_probe:inset_end_probe], color='C'+str(i+1), linewidth = 2.0, label=input_files[i][1], linestyle=input_files[i][2], alpha = 1.0)
@@ -135,7 +139,5 @@ for name in names:
                     a.fill_between(df['Probe'][inset_start_probe:inset_end_probe]/ float(N), yminus[inset_start_probe:inset_end_probe], yplus[inset_start_probe:inset_end_probe], alpha=0.3)
                 plt.setp(a, yticks=[])
 
-
-        plt.tight_layout()
         out_name = names[name][0]
         plt.savefig(plots_base + '/' + str(out_name) + '-' + out_reward_name + '.pdf', dpi = 300)
