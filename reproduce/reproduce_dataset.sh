@@ -4,8 +4,8 @@ set -ex
 
 dataset=$1
 sample_para=0.01
-iterations='2'
-budget='50'
+iterations='20'
+budget='5000'
 alpha=0.01
 featuretype='default'
 rewardfunction='new_nodes'
