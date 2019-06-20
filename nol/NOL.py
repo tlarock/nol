@@ -178,7 +178,7 @@ def nol(G, alpha, budget, output_dir='output_file.txt', policy='NOL', regulariza
 
             values = get_values(G, policy, samples_mat, features, unprobedNodeIndices, unprobedNodeSet, theta)
 
-            write_intermediate(query, absoluteReward, 0, 0, 0, p, theta, intermediate_name)
+            write_intermediate(query, absoluteReward, 0, 0, 0, epsilon, theta, intermediate_name)
             write_query(G, probedNode, targetNodeSet, intermediateGraphFile)
             if (saveGap != 0 and graphSaveInterval == (saveGap)) or query == (budget-1):
                 if query == (budget - 1):
