@@ -25,6 +25,8 @@ def query_network(model, sample_dir, realAdjList, samplePortion, alpha, budget, 
         sampleAdjList, nodes, edges = generate_sample(realAdjList, 'netdisc', attribute_dict=attribute_dict, target_att=target_attribute, k=num_seeds)
     elif sampling_method == 'node':
         sampleAdjList, nodes, edges = generate_sample(realAdjList, 'node', float(samplePortion))
+    elif sampling_method == 'walk':
+        sampleAdjList, nodes, edges = generate_sample(realAdjList, 'walk', float(samplePortion))
 
 
     logger.info("Starting sample nodes: " + str(len(nodes)))
@@ -170,7 +172,7 @@ if __name__ == '__main__':
     parser.add_argument('-m', dest='model', default='nol', choices=MODELS, help='Model to choose which node to query next. Default option is NOL. Options are {}.'.format(MODELS))
     parser.add_argument('-n', dest='networks', type = int, help = 'number of networks to run experiments on (networks must exist in directories).')
     parser.add_argument('-i', dest='input_directory', help='directory containing complete graph\'s adjacency list. Graphs should have name \'networkA\', where A indicates the realization #')
-    parser.add_argument('--sampling-method', dest='sampling_method', type=str, default='node', choices=['node', 'netdisc', 'randomwalk'], help='Flag to compute the sample rather than read it.')
+    parser.add_argument('--sampling-method', dest='sampling_method', type=str, default='node', choices=['node', 'netdisc', 'walk'], help='Flag to compute the sample rather than read it.')
     parser.add_argument('-s', dest='sample_fraction', default=0.01, type=float, help='Fraction of edges/nodes to sample.')
     parser.add_argument('-o', dest='output_folder', help='name of the desired output directory')
     parser.add_argument('-iter', dest='iterations', type = int, help='number of iterations')

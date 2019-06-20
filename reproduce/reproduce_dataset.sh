@@ -14,8 +14,8 @@ savegap=0
 epsilon=0.3
 decay=1
 burnin=0
-sampling_method=node
-processes=$2
+sampling_method=$2
+processes=$3
 
 case ${dataset} in 'ba')
 	data_dir='synthetic/ba-graph_N-10000_m-5_m0-5/';;

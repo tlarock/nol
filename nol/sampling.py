@@ -17,7 +17,7 @@ def generate_sample(G, sampling_method, p=0.01, attribute_dict=None, target_att=
         sampling_method: sampling method to use
         p: what portion of the network to sample, between 0 (nothing) and 1 (whole network)
     """
-    if sampling_method.lower() not in ['node','iKNN', 'netdisc']:
+    if sampling_method.lower() not in ['node','iKNN', 'netdisc', 'walk']:
         raise ValueError("generateNodeSample: sampling_method is not one of 'node', 'edge', 'walk', or 'walkjump'.  No sample was generated.")
     if p < 0 or p > 1:
         raise ValueError("generateNodeSample: portion of network to sample invalid (must be between 0 and 1).  No sample was generated.")
@@ -28,19 +28,9 @@ def generate_sample(G, sampling_method, p=0.01, attribute_dict=None, target_att=
         return netdisc_sample(G, attribute_dict, target_att, k)
     elif sampling_method.lower() == 'iknn':
         return node_sample_iKNN(G, p)
-
-    '''
-    elif sampling_method.lower() == 'edge':
-        return generateEdgeSample(graph_file, output_file, portion)
     elif sampling_method.lower() == 'walk':
-        return generateWalkSample(graph_file, output_file, portion)
-    elif sampling_method.lower() == 'walkjump':
-        return generateWalkJumpSample(graph_file, output_file, portion)
-    elif sampling_method.lower() == 'walklcc':
-        return generateWalkSampleLCC(graph_file, output_file, portion)
-    elif sampling_method.lower() == 'walknodes':
-        return generateWalkNodeSample(graph_file, output_file, portion)
-        '''
+        return generateWalkJumpSample(G, p, 0.15)
+
 
 def node_sample_iKNN(adjacency_list, p):
     """ Generate what the Murai et al. paper refers to as a random node sample (a random walk with
@@ -141,142 +131,36 @@ def node_sample(adjacency_list, p, interval, max_tries):
 
     return sample_adjlist, sampled_nodes, edges
 
-'''
-def generateEdgeSample(G, p):
-    """ generate edge sample from real graph """
-    num_edges = G.number_of_edges()
-    sample_num_edges = int(num_edges * p)
-    edges = np.random.choice(lines,sample_num_edges)
-
-    return output_name
-
-
-def generateWalkNodeSample(G, p):
-    """ 
-    Generate random walk sample from real graph 
-    Size defined by number of NODES, not edges 
-    (for fair comparison with another paper)
+def generateWalkJumpSample(adjacency_list, p, jump_probability):
     """
-    sample_network = nx.Graph()
-    sample_num_nodes = int(G.number_of_nodes() *  p)
+    Generate random walk sample from real graph
+    """
+    sample_network = dict()
+    nodes = set()
+    edges = set()
+    number_of_edges = sum([len(adjacency_list[u]) for u in adjacency_list.keys()]) / 2
+    desired_num_edges = int(p * number_of_edges)
 
-    print('going to sample ' + str(sample_num_nodes) + ' nodes.')
-    currNode = np.random.choice(G.nodes())
-    sample_network.add_node(currNode)
-    while sample_network.number_of_nodes() < sample_num_nodes:
-        if len(list(network[currNode])) > 0:
+    currNode = np.random.choice(list(adjacency_list.keys()))
+    nodes.add(currNode)
+    sample_network[currNode] = dict()
+    while len(edges) < desired_num_edges:
+        if (len(adjacency_list[currNode]) > 0) and (np.random.random() > jump_probability):
             # if we have somewhere to walk to
-            nextNode = np.random.choice(list(network[currNode]))
-            # NOTE: bit of a hack here, not sure why '{}' becomes a neighbor of most if not all nodes
-            # counter NOTE: It's because networkx puts them there :) 
-            while nextNode == '{}':
-                nextNode = np.random.choice(list(network[currNode]))
-            sample_network.add_edge(currNode,nextNode)
+            nextNode = np.random.choice(list(adjacency_list[currNode].keys()))
+            sample_network.setdefault(nextNode, dict())
+            sample_network[nextNode][currNode] = dict()
+            sample_network[currNode][nextNode] = dict()
+            if (currNode, nextNode) not in edges:
+                edges.add((currNode, nextNode))
+            nodes.add(nextNode)
             currNode = nextNode
         else:
-            #forced to restart, clearing progress
-            sample_network.clear()
-            currNode = np.random.choice(network.nodes())
-            while currNode == '{}':
-                currNode = np.random.choice(list(network[currNode]))
-            sample_network.add_node(currNode)
-
-    sample_network = network.subgraph(sample_network.nodes())
-    nx.write_adjlist(sample_network, output_file)
-    return output_file
-
-def generateWalkSample(graph_file, output_file, p):
-    """ generate random walk sample from real graph """
-    network = nx.read_adjlist(graph_file)
-    sample_network = nx.Graph()
-    sample_num_edges = int(len(network.edges()) * p)
-
-    currNode = np.random.choice(network.nodes())
-
-    while len(sample_network.edges()) < sample_num_edges:
-        if len(list(network[currNode])) > 0:
-            # if we have somewhere to walk to
-            nextNode = np.random.choice(list(network[currNode]))
-            # NOTE: bit of a hack here, not sure why '{}' becomes a neighbor of most if not all nodes
-            # counter NOTE: It's because networkx puts them there :) 
-            while nextNode == '{}':
-                nextNode = np.random.choice(list(network[currNode]))
-            sample_network.add_edge(currNode,nextNode)
+            ## jump
+            nextNode = np.random.choice(list(adjacency_list.keys()))
+            sample_network[nextNode] = dict()
+            nodes.add(nextNode)
             currNode = nextNode
-        else:
-            #forced to restart, clearing progress
-            sample_network.clear()
-            currNode = np.random.choice(network.nodes())
-            while currNode == '{}':
-                currNode = np.random.choice(list(network[currNode]))
-            sample_network.add_node(currNode)
 
-    nx.write_adjlist(sample_network, output_name, data=False)
-    return output_name
+    return sample_network, nodes, edges
 
-def generateWalkJumpSample(graph_file, output_file, p):
-    """ generate random walk with jumps sample from real graph """
-    network = nx.read_adjlist(graph_file)
-    sample_network = nx.Graph()
-    sample_num_edges = int(len(network.edges()) * p)
-
-    currNode = np.random.choice(network.nodes())
-    while len(sample_network.edges()) < sample_num_edges:
-        coin = np.random.rand(1)
-        if coin <= .15:
-            #jump
-            currNode = np.random.choice(network.nodes())
-            sample_network.add_node(currNode)
-        else:
-            if len(list(network[currNode])) > 0:
-                # if we have somewhere to walk to
-                nextNode = np.random.choice(list(network[currNode]))
-                while nextNode == '{}':
-                    nextNode = np.random.choice(list(network[currNode]))
-                sample_network.add_edge(currNode,nextNode)
-                currNode = nextNode
-            else:
-                #forced to jump, do not clear progress
-                currNode = np.random.choice(network.nodes())
-                while currNode == '{}':
-                    currNode = np.random.choice(list(network[currNode]))
-                sample_network.add_node(currNode)
-
-    nx.write_adjlist(sample_network, output_file)
-    return output_file
-
-
-def generateWalkSampleLCC(graph_file, output_file, p):
-    """ generate random walk sample from real graph's Largest Connected Component """
-    network = nx.read_adjlist(graph_file)
-    sample_network = nx.Graph()
-    sample_num_edges = int(len(network.edges()) * p)
-
-    lcc = sorted(nx.connected_component_subgraphs(network), key = len, reverse=True)[0]
-
-    currNode = np.random.choice(lcc.nodes())
-    curr_num_edges = 0
-    retry_count = 0
-    while len(sample_network.edges()) < sample_num_edges:
-        if len(list(network[currNode])) > 0:
-            nextNode = np.random.choice(list(network[currNode]))
-            while nextNode == '{}':
-                nextNode = np.random.choice(list(network[currNode]))
-            sample_network.add_edge(currNode,nextNode)
-            currNode = nextNode
-        else:
-            #forced to jump, does not clear progress
-            currNode = np.random.choice(lcc.nodes())
-            while currNode == '{}':
-                currNode = np.random.choice(list(network[currNode]))
-            sample_network.add_node(currNode)
-
-    nx.write_adjlist(sample_network, output_name, data=False)
-    return output_name
-
-
-
-if __name__ == '__main__':
-    args = sys.argv
-    generateSample(args[1], args[2], args[3], float(args[4]))
-'''
