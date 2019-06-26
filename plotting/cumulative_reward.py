@@ -70,11 +70,11 @@ elif fig_num == '9':
 
     names = {
         'synthetic/ba-graph_N-10000_m-5_m0-5/':('BA',10000),
-        #'synthetic/N-10000_maxcc-0.95_maxgcc-0.15_avgDeg-10/': ('BTER', 10000),
-        #'cora/': ('Cora', 23000),
-        #'dblp/': ('DBLP', 6700),
-        #'enron/':('Enron', 36700),
-        #'caida/':('Caida', 26500)
+        'synthetic/N-10000_maxcc-0.95_maxgcc-0.15_avgDeg-10/': ('BTER', 10000),
+        'cora/': ('Cora', 23000),
+        'dblp/': ('DBLP', 6700),
+        'enron/':('Enron', 36700),
+        'caida/':('Caida', 26500)
     }
 
 else:
