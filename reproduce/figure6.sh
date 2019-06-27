@@ -1,8 +1,8 @@
 #!/bin/bash
 
-processes=1
+processes=$1
 
-bash reproduce_dataset 'twitter' node $processes
+bash reproduce_dataset.sh 'twitter' $processes 'wait'
 
 ## PLOTTING CODE
 cd ../plotting/

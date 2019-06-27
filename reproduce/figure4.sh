@@ -5,13 +5,13 @@ set -ex
 
 processes=$1
 
-bash reproduce_dataset.sh 'lfr-1' node $processes 'wait' &
-bash reproduce_dataset.sh 'lfr-2' node $processes 'wait' &
-bash reproduce_dataset.sh 'lfr-3' node $processes 'wait' &
-bash reproduce_dataset.sh 'lfr-4' node $processes 'wait' &
+bash reproduce_dataset.sh 'lfr-1' $processes 'wait' &
+bash reproduce_dataset.sh 'lfr-2' $processes 'wait' &
+bash reproduce_dataset.sh 'lfr-3' $processes 'wait' &
+bash reproduce_dataset.sh 'lfr-4' $processes 'wait' &
 
 wait
 
 ## PLOTTING CODE
 cd ../plotting/
-python cumulative_reward 4
+python cumulative_reward.py 4

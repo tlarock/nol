@@ -19,7 +19,8 @@ processes=$1
 declare -a data_dirs
 data_dirs=(synthetic/ba-graph_N-10000_m-5_m0-5/ synthetic/N-10000_maxcc-0.95_maxgcc-0.15_avgDeg-10/)
 declare -a sample_sizes
-sample_sizes=(0.01 0.025 0.05 0.075 0.1)
+## NOTE: If you are not running figure3.sh first, add 0.01 to sample_sizes array
+sample_sizes=(0.025 0.05 0.075 0.1)
 
 for data_dir in "${data_dirs[@]}"
 do
