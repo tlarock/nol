@@ -56,7 +56,7 @@ log_file=../results/logs/NOL-${dataset}.out
 
 python3 ../nol/run_experiment.py -m NOL -i $base_input -s $sample_para -o $output_folder -n 1 -iter $iterations -b $budget --alpha $alpha --feats $featuretype --reward $rewardfunction --save_gap $savegap -p $epsilon --decay $decay --burn $burnin --sampling-method $sampling_method --processes $processes --log $log_file &
 
-
+'''
 ## NOL-HTR(\epsilon=0.3, k=ln(n))
 ktype=funct
 k=np.log
@@ -99,3 +99,4 @@ fi
 #fi
 
 #python sampling.py ${knn}/data/${knn_data} -s 0.01 -b $budget -e $iterations -m rn --results_dir ${knn}/results/
+'''

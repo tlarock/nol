@@ -143,7 +143,11 @@ def nol(G, alpha, budget, output_dir='output_file.txt', policy='NOL', regulariza
             if reward_function == 'attribute':
                 numberOfTargetNodes = len(targetNodeSet) - initialTargetNodes
 
-            deg_values = {node:len(G.sample_graph_adjlist[G.row_to_node[node]]) for node in unprobedNodeIndices}
+            if reward_function == 'attribute':
+                deg_values = {node:features[node,4] for node in unprobedNodeIndices}
+            else:
+                deg_values = {node:len(G.sample_graph_adjlist[G.row_to_node[node]]) for node in unprobedNodeIndices}
+
             nodeIndex = max(deg_values.items(), key=lambda kv: kv[1])[0]
             probedNode = G.row_to_node[nodeIndex]
             new_nodes = G.probe(probedNode)
@@ -178,7 +182,7 @@ def nol(G, alpha, budget, output_dir='output_file.txt', policy='NOL', regulariza
 
             values = get_values(G, policy, samples_mat, features, unprobedNodeIndices, unprobedNodeSet, theta)
 
-            write_intermediate(query, absoluteReward, 0, 0, 0, p, theta, intermediate_name)
+            write_intermediate(query, absoluteReward, 0, 0, 0, epsilon, theta, intermediate_name)
             write_query(G, probedNode, targetNodeSet, intermediateGraphFile)
             if (saveGap != 0 and graphSaveInterval == (saveGap)) or query == (budget-1):
                 if query == (budget - 1):
@@ -439,12 +443,10 @@ def online_regression_update(theta, alpha, delta, node_features):
         the updated parameters
     '''
     ## Compute the gradient (based on loss=(reward-value)**2)
-    # TODO: Why does it perform worse with a more correct derivative?
-    #gradient = (2*(delta)) * node_features
-    gradient = (delta) * node_features
+    gradient = (-2*(delta)) * node_features
 
     ## update theta
-    theta = theta + (alpha*gradient.T)
+    theta = theta - (alpha*gradient.T)
 
     return theta
 
