@@ -32,12 +32,12 @@ if len(argv) == 1 or fig_num == '3':
     num_probes = 5000
 
     names = {
-        'synthetic/ba-graph_N-10000_m-5_m0-5/':('BA',10000),
+        #'synthetic/ba-graph_N-10000_m-5_m0-5/':('BA',10000),
         'synthetic/N-10000_maxcc-0.95_maxgcc-0.15_avgDeg-10/': ('BTER', 10000),
-        'cora/': ('Cora', 23000),
-        'dblp/': ('DBLP', 6700),
-        'enron/':('Enron', 36700),
-        'caida/':('Caida', 26500)
+        #'cora/': ('Cora', 23000),
+        #'dblp/': ('DBLP', 6700),
+        #'enron/':('Enron', 36700),
+        #'caida/':('Caida', 26500)
     }
 elif fig_num == '4':
     start_probe = 0
@@ -85,18 +85,17 @@ for name in names:
     if (fig_num == '3' or fig_num == '9') and 'ba' in name:
         legend=True
     else:
-        legend=False
+        legend=True
 
     N = names[name][1]
     input_dir = results_base + name + sample_dir
 
-    #nonpara_results = '/Users/larock/git/nol/baseline/net_complete/mab_explorer/results/DBLP'
-    #nonpara_results = '/Users/larock/git/nol/baseline/net_complete/mab_explorer/results/BTER'
+    nonpara_results = '/Users/larock/git/nol/baseline/net_complete/mab_explorer/results/' + names[name][0]+ '_rn_results'
 
     input_files = [
             (input_dir + 'default-new_nodes-NOL-epsilon-0.3-decay-1/network1/NOL_a0.01.csv', r'NOL($\epsilon=0.3$)', '-'),
             (input_dir + 'default-new_nodes-NOL-HTR-epsilon-0.3-decay-1/network1/NOL-HTR_a0.01.csv', r'NOL-HTR($\epsilon_0=0.3$,$k=\ln(n)$)', '-'),
-            #(nonpara_results + '_KNN-UCB.csv', r'KNN($k=20$)-UCB($\alpha=2.0$)', '-'),
+            (nonpara_results + '_KNN-UCB.csv', r'KNN($k=20$)-UCB($\alpha=2.0$)', '-'),
             (input_dir + 'baseline-new_nodes-rand/network1/rand_a0.csv', 'Random', '-'),
             (input_dir + 'baseline-new_nodes-high-jump//network1/high_a0.csv', 'High + Jump', '-'),
             (input_dir + 'baseline-new_nodes-high/network1/high_a0.csv', 'High', '-'),
