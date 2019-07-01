@@ -56,7 +56,6 @@ log_file=../results/logs/NOL-${dataset}.out
 
 python3 ../nol/run_experiment.py -m NOL -i $base_input -s $sample_para -o $output_folder -n 1 -iter $iterations -b $budget --alpha $alpha --feats $featuretype --reward $rewardfunction --save_gap $savegap -p $epsilon --decay $decay --burn $burnin --sampling-method $sampling_method --processes $processes --log $log_file &
 
-'''
 ## NOL-HTR(\epsilon=0.3, k=ln(n))
 ktype=funct
 k=np.log
@@ -77,15 +76,15 @@ python3 ../nol/run_experiment.py -m high -p 0 -i $base_input -s $sample_para -o 
 ## High-jump
 output_folder=${base_output}/baseline-${rewardfunction}'-high-jump/'
 log_file=../results/logs/high-jump-${dataset}.out
-python3 ../nol/run_experiment.py -m high -p ${epsilon} -i $base_input -s $sample_para -o $output_folder -n 1 -iter $iterations -b $budget --reward $rewardfunction --save_gap $savegap --processes $processes --log $log_file &
+python3 ../nol/run_experiment.py -m high -p ${epsilon} -i $base_input -s $sample_para -o $output_folder -n 1 -iter $iterations -b $budget --reward $rewardfunction --save_gap $savegap --sampling-method $sampling_method --processes $processes --log $log_file &
 
 ## low 
 output_folder=${base_output}/baseline-${rewardfunction}'-low/'
 log_file=../results/logs/low-${dataset}.out
-python3 ../nol/run_experiment.py -m  low -p ${epsilon} -i $base_input -s $sample_para -o $output_folder -n 1 -iter $iterations -b $budget --reward $rewardfunction --save_gap $savegap --processes $processes --log $log_file &
+python3 ../nol/run_experiment.py -m  low -p ${epsilon} -i $base_input -s $sample_para -o $output_folder -n 1 -iter $iterations -b $budget --reward $rewardfunction --save_gap $savegap --sampling-method $sampling_method --processes $processes --log $log_file &
 
 
-if [ $3 == 'wait' ]
+if [ $4 == 'wait' ]
 then
 	wait
 fi
@@ -99,4 +98,3 @@ fi
 #fi
 
 #python sampling.py ${knn}/data/${knn_data} -s 0.01 -b $budget -e $iterations -m rn --results_dir ${knn}/results/
-'''

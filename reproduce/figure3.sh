@@ -7,10 +7,10 @@ processes=$1
 
 bash reproduce_dataset.sh ba node $processes 'wait' &
 bash reproduce_dataset.sh bter node $processes 'wait' &
-bash reproduce_dataset.sh cora node $processes 'wait' &
+bash reproduce_dataset.sh cora node $processes 'wait'
 bash reproduce_dataset.sh dblp node $processes 'wait' &
 bash reproduce_dataset.sh caida node $processes 'wait' &
-bash reproduce_dataset.sh enron node $processes 'wait' &
+bash reproduce_dataset.sh enron node $processes 'wait' 
 
 wait
 

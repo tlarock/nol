@@ -16,7 +16,6 @@ argv = sys.argv
 if len(argv) > 1:
     fig_num = argv[1]
 
-legend=True
 title_size = 37
 font_size = 30
 tick_size = 32
@@ -28,6 +27,7 @@ sample_dir = 'node-0.01/'
 plots_base = '../results/plots/cumulative_reward/'
 results_base = '../results/'
 if len(argv) == 1 or fig_num == '3':
+    fig_num = '3'
     start_probe = 0
     num_probes = 5000
 
@@ -82,6 +82,11 @@ else:
     names = {}
 
 for name in names:
+    if (fig_num == '3' or fig_num == '9') and 'ba' in name:
+        legend=True
+    else:
+        legend=False
+
     N = names[name][1]
     input_dir = results_base + name + sample_dir
 
