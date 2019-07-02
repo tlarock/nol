@@ -171,6 +171,8 @@ def nol(G, alpha, budget, output_dir='output_file.txt', policy='NOL', regulariza
             ## Calculate absolute reward
             if reward_function == 'attribute':
                 absoluteReward = len(targetNodeSet) - initialTargetNodes - numberOfTargetNodes
+                if policy in ['NOL', 'NOL-HTR']:
+                    absoluteReward += 0.0001
 
             ## Update reward
             rewards.append(absoluteReward)
@@ -207,7 +209,7 @@ def nol(G, alpha, budget, output_dir='output_file.txt', policy='NOL', regulariza
         ## need the number of nodes before the probe
         numberOfNodes = len(G.node_to_row)
         if reward_function == 'attribute':
-            numberOfTargetNodes = len(targetNodeSet) - initialTargetNodes 
+            numberOfTargetNodes = len(targetNodeSet) - initialTargetNodes
 
         ## Choose a node (index) to probe
         nodeIndex, jump = action(G, policy, values, unprobedNodeIndices, epsilon)
@@ -249,6 +251,8 @@ def nol(G, alpha, budget, output_dir='output_file.txt', policy='NOL', regulariza
             reward = num_new_edges
         elif reward_function == 'attribute':
             reward = len(targetNodeSet) - initialTargetNodes - numberOfTargetNodes
+            if policy in ['NOL', 'NOL-HTR']:
+                reward += 0.0001
 
         ## Update reward
         rewards.append(reward)
