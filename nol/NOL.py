@@ -172,7 +172,7 @@ def nol(G, alpha, budget, output_dir='output_file.txt', policy='NOL', regulariza
             if reward_function == 'attribute':
                 absoluteReward = len(targetNodeSet) - initialTargetNodes - numberOfTargetNodes
                 if policy in ['NOL', 'NOL-HTR']:
-                    absoluteReward += 0.1
+                    absoluteReward += 1
 
             ## Update reward
             rewards.append(absoluteReward)
@@ -252,7 +252,7 @@ def nol(G, alpha, budget, output_dir='output_file.txt', policy='NOL', regulariza
         elif reward_function == 'attribute':
             reward = len(targetNodeSet) - initialTargetNodes - numberOfTargetNodes
             if policy in ['NOL', 'NOL-HTR']:
-                reward += 0.1
+                reward += 1
 
         ## Update reward
         rewards.append(reward)
