@@ -34,6 +34,7 @@ num_probes = 5000
 samples = ['0.01', '0.025', '0.05', '0.075', '0.1']
 network = 1
 for generator, name in inputs:
+    print(name)
     data = defaultdict(list)
     plt.figure(figsize=(10,7))
     plt.xlabel(r'% Nodes Probed')
@@ -47,6 +48,7 @@ for generator, name in inputs:
             data[sample].append(df[start_probe:num_probes]['delta'].fillna(0).abs().cumsum())
 
     for sample in sorted(data.keys()):
+        print(sample)
         y = np.array(data[sample])
         avgs = y.mean(axis = 0)
         stds = y.std(axis = 0)

@@ -34,12 +34,12 @@ if len(argv) == 1 or fig_num == '3':
     num_probes = 5000
 
     names = {
-        #'synthetic/ba-graph_N-10000_m-5_m0-5/':('BA',10000),
+        'synthetic/ba-graph_N-10000_m-5_m0-5/':('BA',10000),
         'synthetic/N-10000_maxcc-0.95_maxgcc-0.15_avgDeg-10/': ('BTER', 10000),
-        #'cora/': ('Cora', 23000),
-        #'dblp/': ('DBLP', 6700),
-        #'enron/':('Enron', 36700),
-        #'caida/':('Caida', 26500)
+        'cora/': ('Cora', 23000),
+        'dblp/': ('DBLP', 6700),
+        'enron/':('Enron', 36700),
+        'caida/':('Caida', 26500)
     }
 elif fig_num == '4':
     start_probe = 0
@@ -60,7 +60,7 @@ elif fig_num == '6':
     }
 elif fig_num == '7':
     start_probe = 0
-    num_probes = 100
+    num_probes = 500
     out_reward_name = 'attribute'
     names = {
         'synthetic/BTER_anom_clique/':('bter_clique', 1000),
@@ -95,13 +95,21 @@ else:
     names = {}
 
 for name in names:
-    if (fig_num == '3' or fig_num == '9') and 'ba' in name:
-        legend=True
-    else:
-        legend=True
+    out_name = names[name][0]
+    print(out_name)
 
     N = names[name][1]
+    if out_name == 'livejournal' or out_name == 'patents':
+        sample_dir = 'node-0.0001/'
+    else:
+        sample_dir = 'node-0.01/'
+
     input_dir = results_base + name + sample_dir
+
+    if ((fig_num == '3' or fig_num == '9') and 'ba' in name) or (fig_num == '4' and out_name == 'LFR-1'):
+        legend=True
+    else:
+        legend=False
 
     if fig_num != '7':
         nonpara_results = '/Users/larock/git/nol/baseline/net_complete/mab_explorer/results/' + names[name][0]+ '_rn_results'
@@ -163,6 +171,17 @@ for name in names:
             for legobj in leg.legendHandles:
                 legobj.set_linewidth(3.0)
 
+        if fig_num == '4':
+            if '1' in out_name:
+                plt.title(r'$\mu=0.1,Q=0.8$')
+            elif '2' in out_name:
+                plt.title(r'$\mu=0.2,Q=0.7$')
+            elif '3' in out_name:
+                plt.title(r'$\mu=0.3,Q=0.46$')
+            elif '4' in out_name:
+                plt.title(r'$\mu=0.4,Q=0.41$')
+
+
         plt.tight_layout()
         if names[name][0] == 'Twitter':
             inset_start_probe = 500
@@ -185,9 +204,7 @@ for name in names:
                     a.fill_between(df['Probe'][inset_start_probe:inset_end_probe]/ float(N), yminus[inset_start_probe:inset_end_probe], yplus[inset_start_probe:inset_end_probe], alpha=0.3)
                 plt.setp(a, yticks=[])
 
-        out_name = names[name][0]
         if fig_num != '9':
-            print(out_name)
             plt.savefig(plots_base + '/' + str(out_name) + '-' + out_reward_name + '.pdf', dpi = 300)
         else:
             plt.savefig(plots_base + '/' + str(out_name) + '-' + out_reward_name + '-walk.pdf', dpi = 300)
