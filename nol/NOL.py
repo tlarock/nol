@@ -103,7 +103,7 @@ def nol(G, alpha, budget, output_dir='output_file.txt', policy='NOL', regulariza
     targetNodeSet=set()
     if reward_function == 'attribute':
         ## assumes 'netdisc' sampling strategy
-        if seeds:
+        if seeds is not None:
             targetNodeSet = {seed for seed in seeds}
 
         initialTargetNodes = len(targetNodeSet)
