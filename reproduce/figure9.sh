@@ -7,7 +7,7 @@ processes=$1
 
 bash reproduce_dataset.sh ba walk $processes 'wait' & 
 bash reproduce_dataset.sh bter walk $processes 'wait' &
-bash reproduce_dataset.sh cora walk $processes 'wait' &
+bash reproduce_dataset.sh cora walk $processes 'wait'
 bash reproduce_dataset.sh dblp walk $processes 'wait' &
 bash reproduce_dataset.sh caida walk $processes 'wait' &
 bash reproduce_dataset.sh enron walk $processes 'wait' 

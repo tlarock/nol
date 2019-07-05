@@ -23,7 +23,7 @@ def read_attributes(filename, delim='\t', ids = []):
             if len(ids) > 0 and attr_id not in ids:
                 continue
 
-            L = line.split(delim)
+            L = line.strip().split(delim)
             for node in L:
                 attribute_dict.setdefault(node, [])
                 attribute_dict[node].append(attr_id)
