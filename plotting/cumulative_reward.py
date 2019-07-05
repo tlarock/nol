@@ -105,6 +105,11 @@ for name in names:
     else:
         sample_dir = 'node-0.01/'
 
+    if out_name == 'DBLP':
+        num_probes = 4000
+    elif out_name != 'DBLP' and fig_num == '3':
+        num_probes = 5000
+
     input_dir = results_base + name + sample_dir
 
     if ((fig_num == '3' or fig_num == '9') and 'ba' in name) or (fig_num == '4' and out_name == 'LFR-1') or (fig_num == '7'):

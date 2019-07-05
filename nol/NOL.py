@@ -105,9 +105,7 @@ def nol(G, alpha, budget, output_dir='output_file.txt', policy='NOL', regulariza
         ## assumes 'netdisc' sampling strategy
         if seeds:
             targetNodeSet = {seed for seed in seeds}
-        else:
-            targetNodeSet = {node for node in G.node_to_row \
-                         if target_attribute in G.attribute_dict[node] and (len(G.complete_graph_adjlist[node]) == len(G.sample_graph_adjlist[node]))}
+
         initialTargetNodes = len(targetNodeSet)
         logging.info('# initial target nodes: ' + str(initialTargetNodes))
         i = 0
