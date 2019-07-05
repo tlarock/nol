@@ -56,18 +56,19 @@ elif fig_num == '6':
     num_probes = 50000
 
     names = {
-        'twitter/': ('Twitter', 90000)
+        'twitter/': ('twitter', 90000)
     }
 elif fig_num == '7':
     start_probe = 0
     num_probes = 500
     out_reward_name = 'attribute'
     names = {
-        'synthetic/BTER_anom_clique/':('bter_clique', 1000),
-        'synthetic/BTER_anom5/':('bter5', 10000),
-        'synthetic/BTER_anom/':('bter', 10000),
-        'livejournal/':('livejournal', 1),
-        'patents/':('patents',1)
+        #'synthetic/BTER_anom_clique/':('bter_clique', 1000),
+        #'synthetic/BTER_anom5/':('bter5', 10000),
+        #'synthetic/BTER_anom/':('bter', 10000),
+        #'livejournal/':('livejournal', 1),
+        #'patents/':('patents',1)
+        'lj/':('lj', 1)
     }
 elif fig_num == '8':
     start_probe = 0
@@ -99,7 +100,7 @@ for name in names:
     print(out_name)
 
     N = names[name][1]
-    if out_name == 'livejournal' or out_name == 'patents':
+    if out_name == 'livejournal' or out_name == 'patents' or out_name == 'lj':
         sample_dir = 'node-0.0001/'
     else:
         sample_dir = 'node-0.01/'
@@ -127,7 +128,7 @@ for name in names:
         input_files = [
                 (input_dir + 'netdisc-attribute-NOL-epsilon-0.1-decay-0/network1/NOL_a0.01.csv', r'NOL($\epsilon=0.3$)', '-'),
                 (input_dir + 'netdisc-attribute-logit-epsilon-0.1-decay-0/network1/logit_a0.01.csv', r'logit', '-'),
-            (sh_results, r'SH', '-')
+                (sh_results, r'SH', '-')
         ]
 
 

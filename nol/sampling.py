@@ -86,7 +86,7 @@ def netdisc_sample(adjacency_list, attribute_dict, target_att, k):
             edges.add((ne,node))
             edges.add((node,ne))
 
-    return sample_adjlist, nodes, edges
+    return sample_adjlist, nodes, edges, anomalous_nodes
 
 def node_sample(adjacency_list, p, interval, max_tries):
     def induce_subgraph(adjacency_list, nodes):

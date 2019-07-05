@@ -21,8 +21,9 @@ def query_network(model, sample_dir, realAdjList, samplePortion, alpha, budget, 
     np.random.seed() ## Set a new random seed every experiment - necessary for multiprocessing to work properly
     logger = logging.getLogger(__name__)
     logger.info(str(ite))
+    seeds = None
     if sampling_method == 'netdisc':
-        sampleAdjList, nodes, edges = generate_sample(realAdjList, 'netdisc', attribute_dict=attribute_dict, target_att=target_attribute, k=num_seeds)
+        sampleAdjList, nodes, edges, seeds = generate_sample(realAdjList, 'netdisc', attribute_dict=attribute_dict, target_att=target_attribute, k=num_seeds)
     elif sampling_method == 'node':
         sampleAdjList, nodes, edges = generate_sample(realAdjList, 'node', float(samplePortion))
     elif sampling_method == 'walk':
@@ -38,7 +39,7 @@ def query_network(model, sample_dir, realAdjList, samplePortion, alpha, budget, 
         g = Network.Network(realAdjList, sampleAdjList, calculate_features=False, attribute_dict=attribute_dict)
 
     probednode, _, rewards = nol(g, alpha, budget, outfile,  policy=model, regularization='no',reward_function = reward_function,
-                                              saveGap = saveGAP, iteration=ite, epsilon=p, k=k, decay=decay, target_attribute=target_attribute, burn_in=burn_in)
+                                              saveGap = saveGAP, iteration=ite, epsilon=p, k=k, decay=decay, target_attribute=target_attribute, seeds=seeds, burn_in=burn_in)
 
     reward_cumulative = np.cumsum(rewards)
 
