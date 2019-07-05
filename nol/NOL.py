@@ -172,14 +172,16 @@ def nol(G, alpha, budget, output_dir='output_file.txt', policy='NOL', regulariza
             if reward_function == 'attribute':
                 absoluteReward = len(targetNodeSet) - initialTargetNodes - numberOfTargetNodes
                 if policy in ['NOL', 'NOL-HTR']:
-                    absoluteReward += 1
+                    reward = absoluteReward + 0.1
+                else:
+                    reward = absoluteReward
 
             ## Update reward
             rewards.append(absoluteReward)
 
             ## update samples matrix
             if policy not in ['high', 'low', 'rand']:
-                samples_mat = np.vstack( (samples_mat, np.append(features[nodeIndex], np.array([absoluteReward])) ) )
+                samples_mat = np.vstack( (samples_mat, np.append(features[nodeIndex], np.array([reward])) ) )
                 features = G.update_features(G, probedNode)
 
             values = get_values(G, policy, samples_mat, features, unprobedNodeIndices, unprobedNodeSet, theta)
@@ -246,16 +248,18 @@ def nol(G, alpha, budget, output_dir='output_file.txt', policy='NOL', regulariza
 
         ## Calculate absolute reward
         if reward_function == 'new_nodes':
-            reward = len(G.node_to_row) - numberOfNodes
+            absoluteReward = reward = len(G.node_to_row) - numberOfNodes
         elif reward_function == 'new_edges':
-            reward = num_new_edges
+            absoluteReward = reward = num_new_edges
         elif reward_function == 'attribute':
-            reward = len(targetNodeSet) - initialTargetNodes - numberOfTargetNodes
+            absoluteReward = len(targetNodeSet) - initialTargetNodes - numberOfTargetNodes
             if policy in ['NOL', 'NOL-HTR']:
-                reward += 1
+                reward = absoluteReward + 0.1
+            else:
+                reward = absoluteReward
 
         ## Update reward
-        rewards.append(reward)
+        rewards.append(absoluteReward)
 
         if policy == 'NOL-HTR':
             if query == 0:

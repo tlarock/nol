@@ -106,7 +106,7 @@ for name in names:
 
     input_dir = results_base + name + sample_dir
 
-    if ((fig_num == '3' or fig_num == '9') and 'ba' in name) or (fig_num == '4' and out_name == 'LFR-1'):
+    if ((fig_num == '3' or fig_num == '9') and 'ba' in name) or (fig_num == '4' and out_name == 'LFR-1') or (fig_num == '7'):
         legend=True
     else:
         legend=False
