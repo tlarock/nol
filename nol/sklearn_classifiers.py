@@ -7,7 +7,28 @@ from puAdapter import *
 def compute_svm_values(samples_mat, unprobed_features, unprobedNodeIndices, one_class=False):
     features = samples_mat[:,0:samples_mat.shape[1]-1]
     y = samples_mat[:,samples_mat.shape[1]-1]
-    model = SVC(probability=False, kernel = 'poly')
+
+    if one_class:
+        model = SVC(probability=True, kernel = 'poly')
+        model = PUAdapter(model, hold_out_ratio=0.1)
+        model.fit(features, y)
+    else:
+        model = SVC(probability=False, kernel = 'poly')
+        model = model.fit(features, y)
+
+    new_values =dict()
+    for node in unprobedNodeIndices:
+        if one_class:
+            new_values[node] = model.predict_proba(unprobed_features[node].reshape(1,-1))
+        else:
+            new_values[node] = model.decision_function(unprobed_features[node].reshape(1,-1))
+
+    return new_values
+
+def compute_knn_values(samples_mat, unprobed_features, unprobedNodeIndices, one_class=False):
+    features = samples_mat[:,0:samples_mat.shape[1]-1]
+    y = samples_mat[:,samples_mat.shape[1]-1]
+    model = KNeighborsClassifier()
 
     if one_class:
         model = PUAdapter(model, hold_out_ratio=0.1)
@@ -17,19 +38,7 @@ def compute_svm_values(samples_mat, unprobed_features, unprobedNodeIndices, one_
 
     new_values =dict()
     for node in unprobedNodeIndices:
-        new_values[node] = model.decision_function(unprobed_features[node].reshape(1,-1))
-
-    return new_values
-
-def compute_knn_values(samples_mat, unprobed_features, unprobedNodeIndices):
-    features = samples_mat[:,0:samples_mat.shape[1]-1]
-    y = samples_mat[:,samples_mat.shape[1]-1]
-    model = KNeighborsClassifier()
-    model = model.fit(features, y)
-    new_values =dict()
-    for node in unprobedNodeIndices:
         new_values[node] = model.predict_proba(unprobed_features[node].reshape(1,-1))[0][1]
-
 
     return new_values
 
@@ -58,11 +67,16 @@ def compute_logit_values(samples_mat, unprobed_features, unprobedNodeIndices, on
     new_theta = new_theta.reshape((new_theta.shape[0],))
     return values, new_theta
 
-def compute_linreg_values(samples_mat, unprobed_features, unprobedNodeIndices):
+def compute_linreg_values(samples_mat, unprobed_features, unprobedNodeIndices, one_class=False):
     features = samples_mat[:,0:samples_mat.shape[1]-1]
     y = samples_mat[:,samples_mat.shape[1]-1]
     model = LinearRegression()
-    model = model.fit(features, y)
+
+    if one_class:
+        model = PUAdapter(model, hold_out_ratio=0.1)
+        model.fit(features, y)
+    else:
+        model = model.fit(features, y)
 
     new_theta = np.array(model.coef_).T
 

@@ -388,31 +388,39 @@ def get_values(G, policy, samples_mat, features, unprobedNodeIndices, unprobedNo
     if policy in ['NOL', 'NOL-HTR']:
         values = features.dot(theta)
         values = {idx:values[idx] for idx in G.row_to_node.keys() if idx in unprobedNodeIndices}
-    elif policy == 'svm':
-        y = samples_mat[:,samples_mat.shape[1]-1]
-        if np.unique(y).shape[0] == 1:
-            for node in unprobedNodeSet:
-                all_unprobed_mat = np.array(samples_mat)
-                all_unprobed_mat = np.vstack( (all_unprobed_mat, np.append(features[G.node_to_row[node]], np.array([-1]))))
-                values = compute_svm_values(all_unprobed_mat, features, unprobedNodeIndices)
-        else:
-            values = compute_svm_values(samples_mat, features, unprobedNodeIndices)
-    elif policy == 'knn':
-        values = compute_knn_values(samples_mat, features, unprobedNodeIndices)
-    elif policy == 'logit':
-        y = samples_mat[:,samples_mat.shape[1]-1]
-        ## if there is only 1 class, use the 1 class prediction
-        if np.unique(y).shape[0] == 1:
-            for node in unprobedNodeSet:
-                all_unprobed_mat = np.array(samples_mat)
-                all_unprobed_mat = np.vstack( (all_unprobed_mat, np.append(features[G.node_to_row[node]], np.array([-1]))))
-            values, theta = compute_logit_values(all_unprobed_mat, features, unprobedNodeIndices, one_class=True)
-        else:
-            values, theta = compute_logit_values(samples_mat, features, unprobedNodeIndices)
-    elif policy == 'linreg':
-        values, theta = compute_linreg_values(samples_mat, features, unprobedNodeIndices)
     elif policy in ['high', 'low', 'rand']:
         values = compute_deg_values(G, unprobedNodeIndices)
+    else:
+        y = samples_mat[:,samples_mat.shape[1]-1]
+        if np.unique(y).shape[0] == 1:
+            one_class = True
+            for node in unprobedNodeSet:
+                all_unprobed_mat = np.array(samples_mat)
+                all_unprobed_mat = np.vstack( (all_unprobed_mat, np.append(features[G.node_to_row[node]], np.array([-1]))))
+
+        if policy == 'svm':
+            if one_class:
+                values = compute_svm_values(all_unprobed_mat, features, unprobedNodeIndices, one_class=one_class)
+            else:
+                values = compute_svm_values(samples_mat, features, unprobedNodeIndices, one_class=False)
+
+        elif policy == 'knn':
+            if one_class:
+                values = compute_knn_values(all_unprobed_mat, features, unprobedNodeIndices, one_class=one_class)
+            else:
+                values = compute_knn_values(samples_mat, features, unprobedNodeIndices, one_class=False)
+
+        elif policy == 'logit':
+            if one_class:
+                values, theta = compute_logit_values(all_unprobed_mat, features, unprobedNodeIndices, one_class=one_class)
+            else:
+                values, theta = compute_logit_values(samples_mat, features, unprobedNodeIndices, one_class=False)
+        elif policy == 'linreg':
+            if one_class:
+                values, theta = compute_linreg_values(all_unprobed_mat, features, unprobedNodeIndices, one_class=one_class)
+            else:
+                values, theta = compute_linreg_values(samples_mat, features, unprobedNodeIndices, one_class=False)
+
 
     return values
 
