@@ -4,11 +4,17 @@ from sklearn.neighbors import KNeighborsClassifier
 from sklearn.linear_model import LogisticRegression, LinearRegression
 from puAdapter import *
 
-def compute_svm_values(samples_mat, unprobed_features, unprobedNodeIndices):
+def compute_svm_values(samples_mat, unprobed_features, unprobedNodeIndices, one_class=False):
     features = samples_mat[:,0:samples_mat.shape[1]-1]
     y = samples_mat[:,samples_mat.shape[1]-1]
     model = SVC(probability=False, kernel = 'poly')
-    model = model.fit(features, y)
+
+    if one_class:
+        model = PUAdapter(model, hold_out_ratio=0.1)
+        model.fit(features, y)
+    else:
+        model = model.fit(features, y)
+
     new_values =dict()
     for node in unprobedNodeIndices:
         new_values[node] = model.decision_function(unprobed_features[node].reshape(1,-1))

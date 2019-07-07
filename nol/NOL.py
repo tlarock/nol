@@ -389,7 +389,14 @@ def get_values(G, policy, samples_mat, features, unprobedNodeIndices, unprobedNo
         values = features.dot(theta)
         values = {idx:values[idx] for idx in G.row_to_node.keys() if idx in unprobedNodeIndices}
     elif policy == 'svm':
-        values = compute_svm_values(samples_mat, features, unprobedNodeIndices)
+        y = samples_mat[:,samples_mat.shape[1]-1]
+        if np.unique(y).shape[0] == 1:
+            for node in unprobedNodeSet:
+                all_unprobed_mat = np.array(samples_mat)
+                all_unprobed_mat = np.vstack( (all_unprobed_mat, np.append(features[G.node_to_row[node]], np.array([-1]))))
+                values = compute_svm_values(all_unprobed_mat, features, unprobedNodeIndices)
+        else:
+            values = compute_svm_values(samples_mat, features, unprobedNodeIndices)
     elif policy == 'knn':
         values = compute_knn_values(samples_mat, features, unprobedNodeIndices)
     elif policy == 'logit':

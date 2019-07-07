@@ -60,14 +60,9 @@ elif fig_num == '6':
     }
 elif fig_num == '7':
     start_probe = 0
-    num_probes = 500
+    num_probes = 1200
     out_reward_name = 'attribute'
     names = {
-        #'synthetic/BTER_anom_clique/':('bter_clique', 1000),
-        #'synthetic/BTER_anom5/':('bter5', 10000),
-        #'synthetic/BTER_anom/':('bter', 10000),
-        #'livejournal/':('livejournal', 1),
-        #'patents/':('patents',1)
         'lj/':('lj', 1)
     }
 elif fig_num == '8':
@@ -131,9 +126,8 @@ for name in names:
     else:
         sh_results = '/Users/larock/git/network_discovery/baselines/d3ts/src/mab/results/' + names[name][0] + '/dts.5_max_config2_all/extracted/' + names[name][0] + '.tsv'
         input_files = [
-                (input_dir + 'netdisc-attribute-NOL-epsilon-0.1-decay-0/network1/NOL_a0.01.csv', r'NOL($\epsilon=0.3$)', '-'),
-                (input_dir + 'netdisc-attribute-logit-epsilon-0.1-decay-0/network1/logit_a0.01.csv', r'logit', '-'),
-                (sh_results, r'SH', '-')
+                (input_dir + 'netdisc-attribute-logit-epsilon-0.3-decay-1/network1/logit_a0.01.csv', r'NOL-BR($\epsilon=0.1$)', '-'),
+                (sh_results, r'SelectiveHarvesting', '-')
         ]
 
 
