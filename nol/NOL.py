@@ -80,7 +80,11 @@ def nol(G, alpha, budget, output_dir='output_file.txt', policy='NOL', regulariza
     ## initialize log files
     intermediate_result_dir = os.path.join(output_dir, 'intermediate_results')
     if not os.path.exists(intermediate_result_dir):
-        os.makedirs(intermediate_result_dir)
+        try:
+            os.makedirs(intermediate_result_dir)
+        except FileExistsError as e:
+            pass
+
     intermediate_name = os.path.join(intermediate_result_dir, policy + '_iter' + str(iteration) + '_intermediate.txt')
     with open(intermediate_name, 'w') as intermediateFile:
         intermediateFile.write('query\treward\testimate\tdelta\tjump\tp')
@@ -91,13 +95,20 @@ def nol(G, alpha, budget, output_dir='output_file.txt', policy='NOL', regulariza
 
     intermediate_graph_dir = os.path.join(output_dir, 'intermediate_graphs')
     if not os.path.exists(intermediate_graph_dir):
-        os.makedirs(intermediate_graph_dir)
+        try:
+            os.makedirs(intermediate_graph_dir)
+        except FileExistsError as e:
+            pass
+
     intermediateGraphFile = os.path.join(intermediate_graph_dir, policy + '_iter' + str(iteration) + '_graph.txt')
     open(intermediateGraphFile, 'w').close()
     if policy not in ['high', 'low', 'rand']:
         featureFileDir = os.path.join(output_dir, 'feature_analysis')
         if not os.path.exists(featureFileDir):
-            os.makedirs(featureFileDir)
+            try:
+                os.makedirs(featureFileDir)
+            except FileExistsError as e:
+                pass
 
     ## If doing attribute search, initialize data structure
     targetNodeSet=set()
