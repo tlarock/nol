@@ -89,3 +89,7 @@ def compute_deg_values(G, unprobedNodeIndices):
     deg_values = {node:len(G.sample_graph_adjlist[G.row_to_node[node]]) for node in unprobedNodeIndices}
     return deg_values
 
+def compute_mod_values(G, unprobedNodeIndices):
+    deg_values = {node:G.F[node,4] for node in unprobedNodeIndices}
+
+    return deg_values

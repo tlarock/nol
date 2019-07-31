@@ -12,7 +12,7 @@ from sampling import generate_sample
 from utility import read_network
 from utility import read_attributes
 
-MODELS=['globalmax_jump', 'NOL','NOL-HTR', 'logit', 'svm', 'knn', 'linreg', 'high', 'low', 'rand']
+MODELS=['globalmax_jump', 'NOL','NOL-HTR', 'logit', 'svm', 'knn', 'linreg', 'high', 'low', 'rand', 'mod']
 FEATURES=['netdisc', 'default', 'refex', 'node2vec', 'n2v-refex', 'knn']
 
 

@@ -156,9 +156,9 @@ def nol(G, alpha, budget, output_dir='output_file.txt', policy='NOL', regulariza
                 numberOfTargetNodes = len(targetNodeSet) - initialTargetNodes
 
             if reward_function == 'attribute':
-                deg_values = {node:features[node,4] for node in unprobedNodeIndices}
+                deg_values = compute_mod_values(G, unprobedNodeIndices)
             else:
-                deg_values = {node:len(G.sample_graph_adjlist[G.row_to_node[node]]) for node in unprobedNodeIndices}
+                deg_values = compute_deg_values(G, unprobedNodeIndices)
 
             nodeIndex = max(deg_values.items(), key=lambda kv: kv[1])[0]
             probedNode = G.row_to_node[nodeIndex]
@@ -401,6 +401,8 @@ def get_values(G, policy, samples_mat, features, unprobedNodeIndices, unprobedNo
         values = {idx:values[idx] for idx in G.row_to_node.keys() if idx in unprobedNodeIndices}
     elif policy in ['high', 'low', 'rand']:
         values = compute_deg_values(G, unprobedNodeIndices)
+    elif policy == 'mod':
+        values = compute_mod_values(G, unprobedNodeIndices)
     else:
         y = samples_mat[:,samples_mat.shape[1]-1]
         if np.unique(y).shape[0] == 1:
