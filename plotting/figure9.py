@@ -37,7 +37,12 @@ def getDataPerIteration(input_dir, max_iter = float('inf'), start_probe = 0, end
     print('number of iterations: ' + str(len(values_list)))
     return values_list
 
-dimensions = (14, 7)
+font_size = 30
+tick_size = 32
+label_size = 34
+legend_font = 19
+
+
 base = '../results/synthetic/'
 suffix = '/node-0.01/default-new_nodes-NOL-epsilon-0.3-decay-1/network1/intermediate_results/'
 input_dirs = [
@@ -50,6 +55,8 @@ input_dirs = [
                 #(base + '../twitter/' + suffix, 'Twitter'),
                 #(base + 'ER_nets/er-graph_N-10000_p-0.001' + suffix, 'ER')
               ]
+
+
 thetaMapping = {0:'degree', 1:'clustering', 2:'connected component', 3:'fraction probed neighbors', 4:'lost reward'}
 #thetaMapping = {1:'clustering', 2:'connected component', 3:'fraction probed neighbors', 4:'lost reward'}
 max_iter = float('inf')
@@ -65,7 +72,13 @@ colors = ['blue', 'orange', 'green', 'red', 'purple']
 for input_dir, model_name in input_dirs:
     print('generator: ' + str(model_name))
     values = getDataPerIteration(input_dir, max_iter = max_iter, start_probe=start_probe, end_probe=end_probe, verbose=False)
-    plt.figure(figsize=dimensions)
+    plt.figure(figsize=(10, 8))
+    plt.rcParams['xtick.labelsize'] = tick_size
+    plt.rcParams['ytick.labelsize'] = tick_size
+    plt.rcParams['axes.labelsize'] = label_size
+    plt.rcParams['font.size'] = font_size
+    plt.rcParams['legend.fontsize'] = legend_font
+
     plt.title(model_name)
     data = defaultdict(list)
     ## for each iteration
@@ -94,8 +107,8 @@ for input_dir, model_name in input_dirs:
             plt.plot(range(start_probe, x_max), avg, color = colors[i], label = thetaMapping[i])
             plt.fill_between(range(start_probe, x_max), avg-std, avg+std, color = colors[i], alpha = 0.3)
 
-    plt.rcParams['legend.fontsize'] = 12
     plt.ylabel('weight')
     plt.xlabel('probe')
     plt.legend()
+    plt.tight_layout()
     plt.savefig('../results/plots/feature_weights/' + model_name + '-features.pdf', dpi = 300)
