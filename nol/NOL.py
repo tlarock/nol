@@ -100,15 +100,16 @@ def nol(G, alpha, budget, output_dir='output_file.txt', policy='NOL', regulariza
         except FileExistsError as e:
             pass
 
-    intermediateGraphFile = os.path.join(intermediate_graph_dir, policy + '_iter' + str(iteration) + '_graph.txt')
-    open(intermediateGraphFile, 'w').close()
-    if policy not in ['high', 'low', 'rand']:
-        featureFileDir = os.path.join(output_dir, 'feature_analysis')
-        if not os.path.exists(featureFileDir):
-            try:
-                os.makedirs(featureFileDir)
-            except FileExistsError as e:
-                pass
+    if saveGap !=0:
+        intermediateGraphFile = os.path.join(intermediate_graph_dir, policy + '_iter' + str(iteration) + '_graph.txt')
+        open(intermediateGraphFile, 'w').close()
+        if policy not in ['high', 'low', 'rand']:
+            featureFileDir = os.path.join(output_dir, 'feature_analysis')
+            if not os.path.exists(featureFileDir):
+                try:
+                    os.makedirs(featureFileDir)
+                except FileExistsError as e:
+                    pass
 
     ## If doing attribute search, initialize data structure
     targetNodeSet=set()
@@ -199,8 +200,8 @@ def nol(G, alpha, budget, output_dir='output_file.txt', policy='NOL', regulariza
             values = get_values(G, policy, samples_mat, features, unprobedNodeIndices, unprobedNodeSet, theta)
 
             write_intermediate(query, absoluteReward, 0, 0, 0, epsilon, theta, intermediate_name)
-            write_query(G, probedNode, targetNodeSet, intermediateGraphFile)
             if (saveGap != 0 and graphSaveInterval == (saveGap)) or query == (budget-1):
+                write_query(G, probedNode, targetNodeSet, intermediateGraphFile)
                 if query == (budget - 1):
                     query += 1
                 graphSaveInterval = 0
@@ -325,8 +326,8 @@ def nol(G, alpha, budget, output_dir='output_file.txt', policy='NOL', regulariza
             write_intermediate(query, reward, 0, 0, jump, epsilon, None, intermediate_name)
 
         ## Write graph query to output file
-        write_query(G, probedNode, targetNodeSet, intermediateGraphFile)
         if (saveGap != 0 and graphSaveInterval == (saveGap)) or (query == (budget-1) and saveGap > 0):
+            write_query(G, probedNode, targetNodeSet, intermediateGraphFile)
             graphSaveInterval = 0
             if policy not in ['high', 'low', 'rand']:
                 featureFileName = policy + '_iter' + str(iteration) + '_features_' + str(query) + '.txt'
@@ -405,6 +406,7 @@ def get_values(G, policy, samples_mat, features, unprobedNodeIndices, unprobedNo
         values = compute_mod_values(G, unprobedNodeIndices)
     else:
         y = samples_mat[:,samples_mat.shape[1]-1]
+        one_class=False
         if np.unique(y).shape[0] == 1:
             one_class = True
             for node in unprobedNodeSet:

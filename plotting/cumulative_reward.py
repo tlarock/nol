@@ -33,14 +33,16 @@ if len(argv) == 1 or fig_num == '3':
     num_probes = 5000
 
     names = {
-        'synthetic/er-graph_N-10000_p-0.001/':('ER',10000),
-        'synthetic/ba-graph_N-10000_m-5_m0-5/':('BA',10000),
-        'synthetic/N-10000_maxcc-0.95_maxgcc-0.15_avgDeg-10/': ('BTER', 10000),
-        'cora/': ('Cora', 23000),
-        'dblp/': ('DBLP', 6700),
-        'enron/':('Enron', 36700),
-        'caida/':('Caida', 26500),
-        'lj/':('Livejournal', 3997962)
+        #'synthetic/er-graph_N-10000_p-0.001/':('ER',10000),
+        #'synthetic/ba-graph_N-10000_m-5_m0-5/':('BA',10000),
+        #'synthetic/N-10000_maxcc-0.95_maxgcc-0.15_avgDeg-10/': ('BTER', 10000),
+        #'cora/': ('Cora', 23000),
+        #'dblp/': ('DBLP', 6700),
+        #'enron/':('Enron', 36700),
+        #'caida/':('Caida', 26500),
+        #'lj/':('Livejournal', 3997962)
+        'lj/':('Livejournal', 1)
+
     }
 elif fig_num == '4':
     start_probe = 0
@@ -64,7 +66,9 @@ elif fig_num == '7':
     num_probes = 10000
     out_reward_name = 'attribute'
     names = {
+        #'lj/':('lj', 3997962)
         'lj/':('lj', 1)
+
     }
 elif fig_num == '8':
     start_probe = 0
@@ -96,13 +100,14 @@ for name in names:
 
     N = names[name][1]
     if out_name == 'Livejournal' or out_name == 'patents' or out_name == 'lj':
+        num_probes = 100000
         sample_dir = 'node-0.0001/'
     else:
         sample_dir = 'node-0.01/'
 
     if out_name == 'DBLP':
         num_probes = 4000
-    elif out_name != 'DBLP' and fig_num == '3':
+    elif (out_name != 'DBLP' and out_name != 'Livejournal') and fig_num == '3':
         num_probes = 5000
 
     input_dir = results_base + name + sample_dir
@@ -126,11 +131,12 @@ for name in names:
                 (input_dir + 'baseline-new_nodes-low/network1/low_a0.csv', 'Low', '-'),
                 ]
     else:
-        sh_results = '/Users/larock/git/network_discovery/baselines/d3ts/src/mab/results/' + names[name][0] + '/dts.5_max_config2_all/extracted/' + names[name][0] + '.tsv'
+        sh_results = '/Users/larock/git/network_discovery/baselines/d3ts/src/mab/results/' + names[name][0] + '/dts.5_max_config2_all/extracted/' + names[name][0] + '1.tsv'
         input_files = [
-                (input_dir + 'netdisc-attribute-logit-epsilon-0.3-decay-1/network1/logit_a0.01.csv', r'NOL-BR($\epsilon=0.3$)-logit', '-'),
-                (input_dir + 'netdisc-attribute-NOL-epsilon-0.1-decay-0/network1/NOL_a0.01.csv', r'NOL-BR($\epsilon=0.1$)-NOL', '-'),
-                (sh_results, r'SelectiveHarvesting', '-')
+                (results_base + name + 'netdisc-0.01/nac/nac.tsv', r'NAC', '-'),
+                (sh_results, r'SelectiveHarvesting', '-'),
+                (results_base + name + 'netdisc-0.01/netdisc-attribute-logit-epsilon-0.3-decay-1/network1/logit_a0.01.csv', r'NOL-BR($\epsilon=0.3$)-logit', '-'),
+                (results_base + name + 'netdisc-0.01/netdisc-attribute-mod-epsilon-0.0-decay-0/network1/mod_a0.01.csv', r'MOD', '-')
         ]
 
 

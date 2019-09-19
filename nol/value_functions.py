@@ -91,5 +91,4 @@ def compute_deg_values(G, unprobedNodeIndices):
 
 def compute_mod_values(G, unprobedNodeIndices):
     deg_values = {node:G.F[node,4] for node in unprobedNodeIndices}
-
     return deg_values
