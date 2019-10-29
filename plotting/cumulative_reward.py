@@ -24,7 +24,6 @@ legend_font = 19
 sample_dir = 'node-0.01/'
 
 out_reward_name = 'new-nodes'
-
 plots_base = '../results/plots/cumulative_reward/'
 results_base = '../results/'
 if len(argv) == 1 or fig_num == '3':
@@ -33,15 +32,15 @@ if len(argv) == 1 or fig_num == '3':
     num_probes = 5000
 
     names = {
-        #'synthetic/er-graph_N-10000_p-0.001/':('ER',10000),
-        #'synthetic/ba-graph_N-10000_m-5_m0-5/':('BA',10000),
-        #'synthetic/N-10000_maxcc-0.95_maxgcc-0.15_avgDeg-10/': ('BTER', 10000),
-        #'cora/': ('Cora', 23000),
-        #'dblp/': ('DBLP', 6700),
-        #'enron/':('Enron', 36700),
-        #'caida/':('Caida', 26500),
+        'synthetic/er-graph_N-10000_p-0.001/':('ER',10000),
+        'synthetic/ba-graph_N-10000_m-5_m0-5/':('BA',10000),
+        'synthetic/N-10000_maxcc-0.95_maxgcc-0.15_avgDeg-10/': ('BTER', 10000),
+        'cora/': ('Cora', 23000),
+        'dblp/': ('DBLP', 6700),
+        'enron/':('Enron', 36700),
+        'caida/':('Caida', 26500),
         #'lj/':('Livejournal', 3997962)
-        'lj/':('Livejournal', 1)
+        #'lj/':('Livejournal', 1)
 
     }
 elif fig_num == '4':
@@ -76,6 +75,12 @@ elif fig_num == '8':
     names = {
         'regular/':('Regular', 10000),
         'synthetic/er-graph_N-10000_p-0.001/':('ER', 10000)
+    }
+elif fig_num == '9':
+    start_probe = 0
+    num_probes = 500
+    names = {
+            'livejournal/':('livejournal', 3997962)
     }
 elif fig_num == '10':
     sample_dir = 'walk-0.01/'
@@ -117,7 +122,7 @@ for name in names:
     else:
         legend=True
 
-    if fig_num != '7':
+    if fig_num != '7' and fig_num != '9':
         nonpara_results = '/Users/larock/git/nol/baseline/net_complete/mab_explorer/results/' + names[name][0]+ '_rn_results'
         input_files = [
                 (input_dir + 'default-new_nodes-NOL-epsilon-0.3-decay-1/network1/NOL_a0.01.csv', r'NOL($\epsilon=0.3$)', '-'),
@@ -130,7 +135,15 @@ for name in names:
                 (input_dir + 'baseline-new_nodes-high/network1/high_a0.csv', 'High', '-'),
                 (input_dir + 'baseline-new_nodes-low/network1/low_a0.csv', 'Low', '-'),
                 ]
-    else:
+    elif fig_num == '7':
+        sh_results = '/Users/larock/git/network_discovery/baselines/d3ts/src/mab/results/' + names[name][0] + '/dts.5_max_config2_all/extracted/' + names[name][0] + '1.tsv'
+        input_files = [
+                (results_base + name + 'netdisc-0.01/nac/nac.tsv', r'NAC', '-'),
+                (sh_results, r'SelectiveHarvesting', '-'),
+                (results_base + name + 'netdisc-0.01/netdisc-attribute-logit-epsilon-0.3-decay-1/network1/logit_a0.01.csv', r'NOL-BR($\epsilon=0.3$)-logit', '-'),
+                (results_base + name + 'netdisc-0.01/netdisc-attribute-mod-epsilon-0.0-decay-0/network1/mod_a0.01.csv', r'MOD', '-')
+        ]
+    elif fig_num == '9':
         sh_results = '/Users/larock/git/network_discovery/baselines/d3ts/src/mab/results/' + names[name][0] + '/dts.5_max_config2_all/extracted/' + names[name][0] + '1.tsv'
         input_files = [
                 (results_base + name + 'netdisc-0.01/nac/nac.tsv', r'NAC', '-'),
@@ -214,6 +227,7 @@ for name in names:
                 plt.setp(a, yticks=[])
 
         if fig_num != '9':
+            print(plots_base + '/' + str(out_name) + '-' + out_reward_name + '.pdf')
             plt.savefig(plots_base + '/' + str(out_name) + '-' + out_reward_name + '.pdf', dpi = 300)
         else:
             plt.savefig(plots_base + '/' + str(out_name) + '-' + out_reward_name + '-walk.pdf', dpi = 300)

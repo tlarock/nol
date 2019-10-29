@@ -171,7 +171,7 @@ if __name__ == '__main__':
     ## General arguments
     parser = argparse.ArgumentParser(description="Experiment using Network Online Learning to expand an incomplete network.")
     parser.add_argument('-m', dest='model', default='nol', choices=MODELS, help='Model to choose which node to query next. Default option is NOL. Options are {}.'.format(MODELS))
-    parser.add_argument('-n', dest='networks', type = int, help = 'number of networks to run experiments on (networks must exist in directories).')
+    parser.add_argument('-n', dest='networks', type = int, default=1, help = 'number of networks to run experiments on (networks must exist in directories).')
     parser.add_argument('-i', dest='input_directory', help='directory containing complete graph\'s adjacency list. Graphs should have name \'networkA\', where A indicates the realization #')
     parser.add_argument('--sampling-method', dest='sampling_method', type=str, default='node', choices=['node', 'netdisc', 'walk'], help='Flag to compute the sample rather than read it.')
     parser.add_argument('-s', dest='sample_fraction', default=0.01, type=float, help='Fraction of edges/nodes to sample.')
