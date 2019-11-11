@@ -51,8 +51,10 @@ def compute_logit_values(samples_mat, unprobed_features, unprobedNodeIndices, on
         model = PUAdapter(model, hold_out_ratio=0.1)
         model.fit(features, y)
     else:
-        model = model.fit(features, y)
-
+        try:
+            model = model.fit(features, y)
+        except Exception as e:
+            print(e)
 
     values_arr = model.predict_proba(unprobed_features)
 
