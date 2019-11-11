@@ -39,9 +39,6 @@ if len(argv) == 1 or fig_num == '3':
         'dblp/': ('DBLP', 6700),
         'enron/':('Enron', 36700),
         'caida/':('Caida', 26500),
-        #'lj/':('Livejournal', 3997962)
-        #'lj/':('Livejournal', 1)
-
     }
 elif fig_num == '4':
     start_probe = 0
@@ -60,27 +57,20 @@ elif fig_num == '6':
     names = {
         'twitter/': ('twitter', 90000)
     }
-elif fig_num == '7':
+elif fig_num == '8':
     start_probe = 0
-    num_probes = 10000
+    num_probes = 400
+    tick_size=20
     out_reward_name = 'attribute'
     names = {
-        #'lj/':('lj', 3997962)
-        'lj/':('lj', 1)
-
+            'lj/':('livejournal', 3997962)
     }
-elif fig_num == '8':
+elif fig_num == '9':
     start_probe = 0
     num_probes = 5000
     names = {
         'regular/':('Regular', 10000),
         'synthetic/er-graph_N-10000_p-0.001/':('ER', 10000)
-    }
-elif fig_num == '9':
-    start_probe = 0
-    num_probes = 500
-    names = {
-            'livejournal/':('livejournal', 3997962)
     }
 elif fig_num == '10':
     sample_dir = 'walk-0.01/'
@@ -122,7 +112,7 @@ for name in names:
     else:
         legend=True
 
-    if fig_num != '7' and fig_num != '9':
+    if fig_num != '8':
         nonpara_results = '/Users/larock/git/nol/baseline/net_complete/mab_explorer/results/' + names[name][0]+ '_rn_results'
         input_files = [
                 (input_dir + 'default-new_nodes-NOL-epsilon-0.3-decay-1/network1/NOL_a0.01.csv', r'NOL($\epsilon=0.3$)', '-'),
@@ -135,21 +125,12 @@ for name in names:
                 (input_dir + 'baseline-new_nodes-high/network1/high_a0.csv', 'High', '-'),
                 (input_dir + 'baseline-new_nodes-low/network1/low_a0.csv', 'Low', '-'),
                 ]
-    elif fig_num == '7':
-        sh_results = '/Users/larock/git/network_discovery/baselines/d3ts/src/mab/results/' + names[name][0] + '/dts.5_max_config2_all/extracted/' + names[name][0] + '1.tsv'
+    elif fig_num == '8':
+        sh_results = '/Users/larock/git/network_discovery/baselines/d3ts/src/mab/results/' + names[name][0] + '/dts.5_max_config2_all/extracted/' + names[name][0] + '.tsv'
         input_files = [
-                (results_base + name + 'netdisc-0.01/nac/nac.tsv', r'NAC', '-'),
                 (sh_results, r'SelectiveHarvesting', '-'),
-                (results_base + name + 'netdisc-0.01/netdisc-attribute-logit-epsilon-0.3-decay-1/network1/logit_a0.01.csv', r'NOL-BR($\epsilon=0.3$)-logit', '-'),
-                (results_base + name + 'netdisc-0.01/netdisc-attribute-mod-epsilon-0.0-decay-0/network1/mod_a0.01.csv', r'MOD', '-')
-        ]
-    elif fig_num == '9':
-        sh_results = '/Users/larock/git/network_discovery/baselines/d3ts/src/mab/results/' + names[name][0] + '/dts.5_max_config2_all/extracted/' + names[name][0] + '1.tsv'
-        input_files = [
-                (results_base + name + 'netdisc-0.01/nac/nac.tsv', r'NAC', '-'),
-                (sh_results, r'SelectiveHarvesting', '-'),
-                (results_base + name + 'netdisc-0.01/netdisc-attribute-logit-epsilon-0.3-decay-1/network1/logit_a0.01.csv', r'NOL-BR($\epsilon=0.3$)-logit', '-'),
-                (results_base + name + 'netdisc-0.01/netdisc-attribute-mod-epsilon-0.0-decay-0/network1/mod_a0.01.csv', r'MOD', '-')
+                (results_base + name + 'netdisc/netdisc-attribute-logit-epsilon-0.3-decay-1/network1/logit_a0.01.csv', r'NOL-BR($\epsilon=0.3$)-logit', '-'),
+                (results_base + name + 'netdisc/netdisc-attribute-mod-epsilon-0.0-decay-0/network1/mod_a0.01.csv', r'MOD', '-')
         ]
 
 
@@ -226,9 +207,8 @@ for name in names:
                     a.fill_between(df['Probe'][inset_start_probe:inset_end_probe]/ float(N), yminus[inset_start_probe:inset_end_probe], yplus[inset_start_probe:inset_end_probe], alpha=0.3)
                 plt.setp(a, yticks=[])
 
-        if fig_num != '9':
-            print(plots_base + '/' + str(out_name) + '-' + out_reward_name + '.pdf')
+        if fig_num != '10':
+            print(out_name)
             plt.savefig(plots_base + '/' + str(out_name) + '-' + out_reward_name + '.pdf', dpi = 300)
         else:
             plt.savefig(plots_base + '/' + str(out_name) + '-' + out_reward_name + '-walk.pdf', dpi = 300)
-
