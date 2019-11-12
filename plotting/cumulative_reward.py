@@ -96,9 +96,15 @@ for name in names:
     N = names[name][1]
     if out_name == 'Livejournal' or out_name == 'patents' or out_name == 'lj':
         num_probes = 100000
-        sample_dir = 'node-0.0001/'
+        if 'walk' in sample_dir:
+            sample_dir = 'walk-0.0001/'
+        else:
+            sample_dir = 'node-0.0001/'
     else:
-        sample_dir = 'node-0.01/'
+        if 'walk' in sample_dir:
+            sample_dir = 'walk-0.01/'
+        else:
+            sample_dir = 'node-0.01/'
 
     if out_name == 'DBLP':
         num_probes = 4000
@@ -106,8 +112,8 @@ for name in names:
         num_probes = 5000
 
     input_dir = results_base + name + sample_dir
-
-    if ((fig_num == '3' or fig_num == '9') and 'ba' in name) or (fig_num == '4' and out_name == 'LFR-1') or (fig_num == '7'):
+    print(input_dir)
+    if ((fig_num == '3' or fig_num == '10') and 'ba' in name) or (fig_num == '4' and out_name == 'LFR-1') or (fig_num == '7'):
         legend=True
     else:
         legend=True
@@ -129,7 +135,7 @@ for name in names:
         sh_results = '/Users/larock/git/network_discovery/baselines/d3ts/src/mab/results/' + names[name][0] + '/dts.5_max_config2_all/extracted/' + names[name][0] + '.tsv'
         input_files = [
                 (sh_results, r'SelectiveHarvesting', '-'),
-                (results_base + name + 'netdisc/netdisc-attribute-logit-epsilon-0.3-decay-1/network1/logit_a0.01.csv', r'NOL-BR($\epsilon=0.3$)-logit', '-'),
+                (results_base + name + 'netdisc/netdisc-attribute-logit-epsilon-0.1-decay-1/network1/logit_a0.01.csv', r'NOL-BR($\epsilon=0.3$)-logit', '-'),
                 (results_base + name + 'netdisc/netdisc-attribute-mod-epsilon-0.0-decay-0/network1/mod_a0.01.csv', r'MOD', '-')
         ]
 
