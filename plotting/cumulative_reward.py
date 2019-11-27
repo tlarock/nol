@@ -113,10 +113,10 @@ for name in names:
 
     input_dir = results_base + name + sample_dir
     print(input_dir)
-    if ((fig_num == '3' or fig_num == '10') and 'ba' in name) or (fig_num == '4' and out_name == 'LFR-1') or (fig_num == '7'):
+    if ((fig_num == '3' or fig_num == '10') and 'ba' in name) or (fig_num == '4' and out_name == 'LFR-1') or (fig_num == '7') or (fig_num == '8'):
         legend=True
     else:
-        legend=True
+        legend=False
 
     if fig_num != '8':
         nonpara_results = '/Users/larock/git/nol/baseline/net_complete/mab_explorer/results/' + names[name][0]+ '_rn_results'
@@ -136,6 +136,8 @@ for name in names:
         input_files = [
                 (sh_results, r'SelectiveHarvesting', '-'),
                 (results_base + name + 'netdisc/netdisc-attribute-logit-epsilon-0.1-decay-1/network1/logit_a0.01.csv', r'NOL-BR($\epsilon=0.3$)-logit', '-'),
+                (results_base + name + 'netdisc/netdisc-attribute-svm-epsilon-0.1-decay-1/network1/svm_a0.01.csv', r'NOL-BR($\epsilon=0.1$)-svm', '-'),
+                (results_base + name + 'netdisc/netdisc-attribute-svm-epsilon-0.3-decay-1/network1/svm_a0.01.csv', r'NOL-BR($\epsilon=0.3$)-svm', '-'),
                 (results_base + name + 'netdisc/netdisc-attribute-mod-epsilon-0.0-decay-0/network1/mod_a0.01.csv', r'MOD', '-')
         ]
 
