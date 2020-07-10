@@ -8,6 +8,7 @@ Created on Wed Nov 20 11:42:18 2019
 #from sklearn.linear_model import LinearRegression, LogisticRegression
 import statsmodels.formula.api as smf
 from itertools import product
+from leiden_modularity import get_leiden_modularity
 #from statsmodels.discrete.discrete_model import MNLogit
 import numpy as np
 import networkx as nx
@@ -36,7 +37,7 @@ lfr_iter = list(product(mu_vals, alpha_vals))
 
 network_paths = {'lfr-{}-{}'.format(mu, alpha): path_template.format(mu,alpha) \
                  for mu, alpha in lfr_iter}
-lfr_only = True
+lfr_only = False
 ## Add real networks and BTER/BA to the list of networks to consider
 if not lfr_only:
     for real_net in ['caida', 'twitter', 'dblp', 'enron', 'cora']:
@@ -133,7 +134,9 @@ except Exception as e:
     print(e)
 
 try:
-    modularity_dict = pickle.load(open('../data/modularity_dict.pickle', 'rb'))
+    modularity_dict = pickle.load(open('../data/modularity_louvain.pickle', 'rb'))
+    
+    '''
     if not lfr_only:
         real_nets_modularity = {
                 'ba': 0.28492293890817333,
@@ -146,12 +149,14 @@ try:
                 }
         for net,mod in real_nets_modularity.items():
             modularity_dict[net] = mod
+    '''
 
 except Exception as e:
    print(e)  
     
 try:
     degree_exp_dict = pickle.load(open('../data/degree_exp_dict.pickle', 'rb'))
+    '''
     if not lfr_only:
         real_nets_degree_exp = {
              'ba': 2.9989001466353082,
@@ -164,31 +169,16 @@ try:
         }
         for net,exp in real_nets_degree_exp.items():
             degree_exp_dict[net] = exp
-
+    '''
 except Exception as e:
     print(e)
 
-X = np.zeros((len(network_paths), 7))
+X = np.zeros((len(network_paths), 3))
 
 idx = 0
 for name, network_path in network_paths.items():
-    #print('Network: ' + name)
+    print('Network: ' + name)
     G = nx.read_adjlist(network_path)
-    nodes = G.number_of_nodes()
-    #print('\t# Nodes: {}'.format(nodes))
-    
-    edges = G.number_of_edges()
-    X[idx][0] = edges
-    #print('\t# Edges: {}'.format(edges))
-    
-    avg_k = (edges*2) / nodes
-    X[idx][1] = avg_k
-    #print('\tAvg Degree: {}'.format(avg_k))
-    
-    triangles = nx.triangles(G)
-    num_triangles = sum(triangles.values()) / 3.0
-    X[idx][2] = num_triangles  
-    #print('\t# Triangles: {}'.format(num_triangles))
     
     if name in transitivity_dict:
         transitivity = transitivity_dict[name]
@@ -196,7 +186,7 @@ for name, network_path in network_paths.items():
         transitivity = nx.transitivity(G)
         transitivity_dict[name] = transitivity
 
-    X[idx][3] = transitivity   
+    X[idx][0] = transitivity   
     #print('\tTransitivity: {}'.format(transitivity))
     
     if name in modularity_dict:
@@ -204,9 +194,10 @@ for name, network_path in network_paths.items():
     else:
         partition = community.best_partition(G)
         modularity = community.modularity(partition, G)
+        modularity = get_leiden_modularity(G)
         modularity_dict[name] = modularity
 
-    X[idx][4] = modularity
+    X[idx][1] = modularity
     #print('\tModularity: {}'.format(modularity))
     
     if name in degree_exp_dict:
@@ -215,20 +206,17 @@ for name, network_path in network_paths.items():
         degree_sequence = [d for n, d in G.degree()]
         pl = powerlaw.Fit(degree_sequence, verbose=False)
         degree_exponent = pl.power_law.alpha
-    X[idx][5] = degree_exponent
-    #print('\tDegree Exponent: {}'.format(degree_exponent))
+    X[idx][2] = degree_exponent
     
+    print("transitivity: {}, modularity: {}, alpha: {}".format(\
+          transitivity, modularity, degree_exponent))
     idx+=1
 
 
-## Normalize number of  edges and triangles by the maximum across networks
-X[:,0] = 1 - (X[:,0].max() - X[:,0]) / (X[:,0].max() - X[:,0].min())
-X[:,2] = 1 - (X[:,2].max() - X[:,2]) / (X[:,2].max() - X[:,2].min())
-
 import pandas as pd
 
-data = pd.DataFrame({'epsilon': y[1], 'k': y[0], 'edges': X[:, 0], 'avg_k': X[:, 1], \
-                     'triangles': X[:, 2], 'clustering':X[:, 3], 'modularity':X[:,4], 'alpha':X[:,5]}, \
+data = pd.DataFrame({'epsilon': y[1], 'k': y[0], 'clustering':X[:, 0], \
+                     'modularity':X[:,1], 'alpha':X[:,2]}, \
                     index=network_paths.keys())
 
 transitivity_dict = dict(data.clustering)
@@ -241,7 +229,7 @@ except Exception as e:
     
 modularity_dict = dict(data.modularity)
 try:
-    outfile = open('../data/modularity_dict.pickle', 'wb')
+    outfile = open('../data/modularity_louvain.pickle', 'wb')
     pickle.dump(modularity_dict, outfile)
     outfile.close()
 except Exception as e:
