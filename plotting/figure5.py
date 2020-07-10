@@ -33,13 +33,14 @@ start_probe = 50
 num_probes = 5000
 samples = ['0.01', '0.025', '0.05', '0.075', '0.1']
 network = 1
+iterations = 20
 for generator, name in inputs:
     print(name)
     data = defaultdict(list)
     plt.figure(figsize=(10,7))
     plt.xlabel(r'% Nodes Probed')
     plt.ylabel(r'Avg $E(t)$')
-    for iteration in range(0, 20):
+    for iteration in range(0, iterations):
         for sample in samples:
             values_list = []
             input_file = generator + '/node-' + sample + '/default-new_nodes-NOL-HTR-epsilon-0.3-decay-1/network' \
@@ -58,4 +59,4 @@ for generator, name in inputs:
 
     plt.legend()
     plt.tight_layout()
-    plt.savefig('../results/plots/error/' + name + '_AveragePredictionError-50.png', dpi=200)
+    plt.savefig('../results/plots/error/' + name + '_AveragePredictionError-50.pdf')

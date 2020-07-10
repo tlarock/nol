@@ -19,7 +19,7 @@ if len(argv) > 1:
 font_size = 30
 tick_size = 32
 label_size = 34
-legend_font = 19
+legend_font = 13
 
 sample_dir = 'node-0.01/'
 
@@ -113,7 +113,7 @@ for name in names:
 
     input_dir = results_base + name + sample_dir
     print(input_dir)
-    if ((fig_num == '3' or fig_num == '10') and 'ba' in name) or (fig_num == '4' and out_name == 'LFR-1') or (fig_num == '7') or (fig_num == '8'):
+    if ((fig_num == '3' or fig_num == '10') and 'ba' in name) or (fig_num == '4' and out_name == 'LFR-1') or (fig_num == '6') or (fig_num == '7') or (fig_num == '8'):
         legend=True
     else:
         legend=False
@@ -143,7 +143,7 @@ for name in names:
 
 
     ## initialize plot
-    plt.figure(figsize=(10, 8))
+    plt.figure(figsize=(8, 6))
     plt.rcParams['xtick.labelsize'] = tick_size
     plt.rcParams['ytick.labelsize'] = tick_size
     plt.rcParams['axes.labelsize'] = label_size
@@ -156,18 +156,20 @@ for name in names:
             print(e)
             df = None
             continue
-        avg = np.array(df['AvgRewards'][start_probe:num_probes])
-        std = np.array(df['StdRewards'][start_probe:num_probes])
+        every_n = 10
+        indices = list(range(start_probe, num_probes, every_n))
+        avg = np.array(df['AvgRewards'][indices])
+        std = np.array(df['StdRewards'][indices])
         yminus = avg-std
         yplus = avg+std
-
+        
         if 'default' not in input_files[i][0]:
-            plt.plot(df['Probe'][start_probe:num_probes]/ float(N), df['AvgRewards'][start_probe:num_probes], color = 'C'+str(i+1), linewidth = 2.0, label=input_files[i][1], linestyle=input_files[i][2], alpha = 1.0)
-            plt.fill_between(df['Probe'][start_probe:num_probes]/ float(N), yminus, yplus, color = 'C'+str(i+1), alpha=0.3)
+            plt.plot(df['Probe'][indices]/ float(N), df['AvgRewards'][indices], color = 'C'+str(i+1), linewidth = 2.0, label=input_files[i][1], linestyle=input_files[i][2], alpha = 1.0)
+            plt.fill_between(df['Probe'][indices]/ float(N), yminus, yplus, color = 'C'+str(i+1), alpha=0.3)
         else:
-            plt.plot(df['Probe'][start_probe:num_probes]/ float(N), df['AvgRewards'][start_probe:num_probes], linewidth = 2.0, label=input_files[i][1], linestyle=input_files[i][2], alpha = 1.0)
-            plt.fill_between(df['Probe'][start_probe:num_probes]/ float(N), yminus, yplus, alpha=0.3)
-        print('label ' + str(input_files[i][1]) + ' max: ' + str(max(df['AvgRewards'][start_probe:num_probes])))
+            plt.plot(df['Probe'][indices]/ float(N), df['AvgRewards'][indices], linewidth = 2.0, label=input_files[i][1], linestyle=input_files[i][2], alpha = 1.0)
+            plt.fill_between(df['Probe'][indices]/ float(N), yminus, yplus, alpha=0.3)
+        print('label ' + str(input_files[i][1]) + ' max: ' + str(max(df['AvgRewards'][indices])))
 
     if df is not None:
 
@@ -197,26 +199,32 @@ for name in names:
         if names[name][0] == 'twitter':
             inset_start_probe = 500
             inset_end_probe = 2000
-            for i in range(len(input_files)):
+            inset_indices = list(range(inset_start_probe, inset_end_probe, every_n))
+            for i in range(len(input_files)):   
                 try:
+                    print(input_files[i][1])
                     df = pd.read_table(input_files[i][0])
+                    avg = np.array(df['AvgRewards'])
+                    std = np.array(df['StdRewards'])
+                    yminus = avg-std
+                    yplus = avg+std
                 except Exception as e:
                     print(e)
                     df = None
                     continue
 
-                a = plt.axes([.27, .697, .23, .23])
+                a = plt.axes([.33, .691, .22, .22])
                 a.tick_params(axis='x', labelsize=14)
                 if 'default' not in input_files[i][0]:
-                    a.plot(df['Probe'][inset_start_probe:inset_end_probe]/ float(N), df['AvgRewards'][inset_start_probe:inset_end_probe], color='C'+str(i+1), linewidth = 2.0, label=input_files[i][1], linestyle=input_files[i][2], alpha = 1.0)
-                    a.fill_between(df['Probe'][inset_start_probe:inset_end_probe]/ float(N), yminus[inset_start_probe:inset_end_probe], yplus[inset_start_probe:inset_end_probe], color='C'+str(i+1), alpha=0.3)
+                    a.plot(df['Probe'][inset_indices]/ float(N), df['AvgRewards'][inset_indices], color='C'+str(i+1), linewidth = 2.0, label=input_files[i][1], linestyle=input_files[i][2], alpha = 1.0)
+                    a.fill_between(df['Probe'][inset_indices]/ float(N), yminus[inset_indices], yplus[inset_indices], color='C'+str(i+1), alpha=0.3)
                 else:
-                    a.plot(df['Probe'][inset_start_probe:inset_end_probe]/ float(N), df['AvgRewards'][inset_start_probe:inset_end_probe], linewidth = 2.0, label=input_files[i][1], linestyle=input_files[i][2], alpha = 1.0)
-                    a.fill_between(df['Probe'][inset_start_probe:inset_end_probe]/ float(N), yminus[inset_start_probe:inset_end_probe], yplus[inset_start_probe:inset_end_probe], alpha=0.3)
+                    a.plot(df['Probe'][inset_indices]/ float(N), df['AvgRewards'][inset_indices], linewidth = 2.0, label=input_files[i][1], linestyle=input_files[i][2], alpha = 1.0)
+                    a.fill_between(df['Probe'][inset_indices]/ float(N), yminus[inset_indices], yplus[inset_indices], alpha=0.3)
                 plt.setp(a, yticks=[])
 
         if fig_num != '10':
             print(out_name)
-            plt.savefig(plots_base + '/' + str(out_name) + '-' + out_reward_name + '.pdf', dpi = 300)
+            plt.savefig(plots_base + '/' + str(out_name) + '-' + out_reward_name + '.pdf')
         else:
-            plt.savefig(plots_base + '/' + str(out_name) + '-' + out_reward_name + '-walk.pdf', dpi = 300)
+            plt.savefig(plots_base + '/' + str(out_name) + '-' + out_reward_name + '-walk.pdf')
