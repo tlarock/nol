@@ -38,6 +38,8 @@ lfr_iter = list(product(mu_vals, alpha_vals))
 network_paths = {'lfr-{}-{}'.format(mu, alpha): path_template.format(mu,alpha) \
                  for mu, alpha in lfr_iter}
 lfr_only = False
+leiden = True
+
 ## Add real networks and BTER/BA to the list of networks to consider
 if not lfr_only:
     for real_net in ['caida', 'twitter', 'dblp', 'enron', 'cora']:
@@ -123,61 +125,36 @@ for name in best_parameters:
         y[1].append(best_parameters[name][1])
         y[2].append(best_parameters[name][2])
   
- ## Hard coding some feature computations so I don't 
- ## have to keep computing them  
+X = np.zeros((len(network_paths), 4))
 
+transitivity_dict = dict()
+modularity_dict = dict()
+degree_exp_dict = dict()
+
+## Hard coding some feature computations so I don't 
+## have to keep computing them  
+ 
 try:
-    infile = open('../data/transitivity_dict.pickle', 'rb')
-    transitivity_dict = pickle.load(infile)
-    infile.close()
+    transitivity_dict = pickle.load(open('../data/transitivity_dict.pickle', 'rb'))
 except Exception as e:
     print(e)
 
 try:
-    modularity_dict = pickle.load(open('../data/modularity_louvain.pickle', 'rb'))
-    
-    '''
-    if not lfr_only:
-        real_nets_modularity = {
-                'ba': 0.28492293890817333,
-                'bter': 0.7156452992423613,
-                'caida': 0.6713693935631961,
-                'cora': 0.7910239163219234,
-                'dblp': 0.8896087519889658,
-                'enron': 0.6208206027341772,
-               'twitter': 0.868213073668965
-                }
-        for net,mod in real_nets_modularity.items():
-            modularity_dict[net] = mod
-    '''
-
+    if leiden:
+        modularity_dict = pickle.load(open('../data/modularity_leiden.pickle', 'rb'))
+    else:
+        modularity_dict = pickle.load(open('../data/modularity_louvain.pickle', 'rb'))
 except Exception as e:
    print(e)  
     
 try:
     degree_exp_dict = pickle.load(open('../data/degree_exp_dict.pickle', 'rb'))
-    '''
-    if not lfr_only:
-        real_nets_degree_exp = {
-             'ba': 2.9989001466353082,
-             'bter': 3.8729057888441796,
-             'caida': 2.165949109169329,
-             'cora': 3.3920714311873983,
-             'dblp': 3.6562635146960183,
-             'enron': 2.105619434623348,
-             'twitter': 4.069174597979836
-        }
-        for net,exp in real_nets_degree_exp.items():
-            degree_exp_dict[net] = exp
-    '''
 except Exception as e:
     print(e)
 
-X = np.zeros((len(network_paths), 3))
-
 idx = 0
 for name, network_path in network_paths.items():
-    print('Network: ' + name)
+    #print('Network: ' + name)
     G = nx.read_adjlist(network_path)
     
     if name in transitivity_dict:
@@ -186,19 +163,20 @@ for name, network_path in network_paths.items():
         transitivity = nx.transitivity(G)
         transitivity_dict[name] = transitivity
 
-    X[idx][0] = transitivity   
-    #print('\tTransitivity: {}'.format(transitivity))
+    X[idx][0] = transitivity
     
     if name in modularity_dict:
         modularity = modularity_dict[name]
     else:
-        partition = community.best_partition(G)
-        modularity = community.modularity(partition, G)
-        modularity = get_leiden_modularity(G)
+        if leiden:
+            modularity = get_leiden_modularity(G)
+        else:
+            partition = community.best_partition(G)
+            modularity = community.modularity(partition, G)
+        
         modularity_dict[name] = modularity
-
+        
     X[idx][1] = modularity
-    #print('\tModularity: {}'.format(modularity))
     
     if name in degree_exp_dict:
         degree_exponent = degree_exp_dict[name]
@@ -206,19 +184,23 @@ for name, network_path in network_paths.items():
         degree_sequence = [d for n, d in G.degree()]
         pl = powerlaw.Fit(degree_sequence, verbose=False)
         degree_exponent = pl.power_law.alpha
+        degree_exp_dict[name] = degree_exponent
+
     X[idx][2] = degree_exponent
     
-    print("transitivity: {}, modularity: {}, alpha: {}".format(\
-          transitivity, modularity, degree_exponent))
+    #print("transitivity: {}, alpha: {}".format(\
+    #      transitivity, degree_exponent))
     idx+=1
 
 
 import pandas as pd
 
 data = pd.DataFrame({'epsilon': y[1], 'k': y[0], 'clustering':X[:, 0], \
-                     'modularity':X[:,1], 'alpha':X[:,2]}, \
-                    index=network_paths.keys())
+                     'modularity':X[:,1], 'alpha':X[:,2] }, \
+                     index=network_paths.keys())
 
+## ToDo I don't think doing this is really necessary anymore
+## I already have transitivity_dict filled up?
 transitivity_dict = dict(data.clustering)
 try:
     outfile = open('../data/transitivity_dict.pickle', 'wb')
@@ -226,15 +208,19 @@ try:
     outfile.close()
 except Exception as e:
     print(e)
-    
+ 
 modularity_dict = dict(data.modularity)
 try:
-    outfile = open('../data/modularity_louvain.pickle', 'wb')
+    if leiden:
+        outfile = open('../data/modularity_leiden.pickle', 'wb')
+    else:
+        outfile = open('../data/modularity_louvain.pickle', 'wb')
     pickle.dump(modularity_dict, outfile)
     outfile.close()
 except Exception as e:
     print(e)
     
+
 degree_exp_dict = dict(data.alpha)
 try:
     outfile = open('../data/degree_exp_dict.pickle', 'wb')
