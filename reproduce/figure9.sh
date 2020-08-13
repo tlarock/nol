@@ -16,4 +16,4 @@ wait
 
 ## PLOTTING CODE
 cd ../plotting/
-python cumulative_reward.py 10
+python figure9.py
