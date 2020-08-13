@@ -48,12 +48,6 @@ suffix = '/node-0.01/default-new_nodes-NOL-epsilon-0.3-decay-1/network1/intermed
 input_dirs = [
                 (base + 'N-10000_maxcc-0.95_maxgcc-0.15_avgDeg-10' + suffix, 'BTER'),
                 (base + 'ba-graph_N-10000_m-5_m0-5' + suffix, 'BA'),
-                (base + '../enron/' + suffix, 'Enron'),
-                (base + '../cora/' + suffix, 'Cora'),
-                (base + '../caida/' + suffix, 'Caida'),
-                (base + '../dblp/' + suffix, 'DBLP'),
-                #(base + '../twitter/' + suffix, 'Twitter'),
-                #(base + 'ER_nets/er-graph_N-10000_p-0.001' + suffix, 'ER')
               ]
 
 
