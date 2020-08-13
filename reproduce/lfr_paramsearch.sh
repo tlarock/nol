@@ -12,8 +12,6 @@ savegap='0'
 featuretype='default'
 rewardfunction='new_nodes'
 p_vals='0 0.1 0.2 0.3 0.4'
-#k_vals=$(seq 1 16) 
-#k_vals="${k_vals} 32 64 128"
 k_vals="1 2 4 8 16 32 64 128"
 ktype='int'
 decay_vals='0 1'
@@ -52,8 +50,4 @@ do
     done
 done
 
-## if you throw an extra parameter (whatever you want) to the script, it'll wait
-#if [ $# -eq 7 ]
-#then
 wait
-#fi
