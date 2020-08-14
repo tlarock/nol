@@ -2,6 +2,13 @@
 # NOTE: This script relies on the NOL enviornment variable pointing to
 # the highest level directory. e.g. export NOL=path/to/nol
 set -ex
+
+# First argument to this script should be an integer
+# that will determine the number of parallel processes 
+# used per experiment
+processes=$1
+
+# See run_experiment.py for parameter descriptions
 iterations='20'
 budget='5000'
 ktype=funct
@@ -14,11 +21,9 @@ epsilon=0.3
 decay=1
 burnin=0
 sampling_method=node
-processes=$1
 
 declare -a data_dirs
-#data_dirs=(synthetic/ba-graph_N-10000_m-5_m0-5/ synthetic/N-10000_maxcc-0.95_maxgcc-0.15_avgDeg-10/)
-data_dirs=(synthetic/ba-graph_N-10000_m-5_m0-5/)
+data_dirs=(synthetic/ba-graph_N-10000_m-5_m0-5/ synthetic/N-10000_maxcc-0.95_maxgcc-0.15_avgDeg-10/)
 declare -a sample_sizes
 ## NOTE: If you are not running figure3.sh first, add 0.01 to sample_sizes array
 sample_sizes=(0.025 0.05 0.075 0.1)
