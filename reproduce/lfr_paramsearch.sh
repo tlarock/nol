@@ -1,7 +1,6 @@
 #!/bin/bash
 #set -ex
 
-
 program='../nol/run_experiment.py'
 networks=1
 burnin=0
