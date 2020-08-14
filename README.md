@@ -4,7 +4,7 @@
 
 This repository contains code and data to reproduce the results from the following paper:
 
-Larock, Sakharov, Bahdra, and Eliassi-Rad. Understanding the Limitations of Network Online Learning. Forthcoming in Applied Network Science. [ArXiv preprint](https://arxiv.org/abs/2001.07607)
+Larock, Sakharov, Bahdra, and Eliassi-Rad. Understanding the Limitations of Network Online Learning. Forthcoming in Applied Network Science. [ArXiv preprint.](https://arxiv.org/abs/2001.07607)
 
 #### Instructions
 
